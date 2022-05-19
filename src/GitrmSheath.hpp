@@ -22,13 +22,26 @@
 
 namespace sheath {
 
-class Mesh{
-public:
-    // Kokkos::View<Vector2*> nodes;
-    // Kokkos::View<int*[4]> conn;
+using Vector2View = Kokkos::View<Vector2*>;
 
+class Mesh{
+private:
+    int Nel_x_;
+    int Nel_y_;
+    Vector2View nodes_;
+    Kokkos::View<int*[4]> conn_;
+
+public:
     Mesh(){};
 
+    Mesh(int Nel_x,
+         int Nel_y,
+         Vector2View nodes,
+         Kokkos::View<int*[4]> conn):
+         Nel_x_(Nel_x),
+         Nel_y_(Nel_y),
+         nodes_(nodes),
+         conn_(conn){};
 };
 
 Mesh dummy();
