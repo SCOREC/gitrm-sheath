@@ -28,5 +28,7 @@ public:
 };
 
 Particles initializeParticles(int numParticles, Mesh meshObj);
+
 }
+
 #endif
