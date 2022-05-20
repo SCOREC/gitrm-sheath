@@ -7,7 +7,7 @@ Particles initializeParticles(int numParticles, Mesh meshObj, unsigned int rngSe
     meshObj.computeFractionalElementArea();
     int Nel = meshObj.getTotalElements();
     auto fracArea = meshObj.getFractionalElementAreas();
-
+    printf("Total mesh volume is %2.5e\n",meshObj.getTotalArea() );
     IntView initialParticlesPerElem("intial-particle-distribution",Nel);
     IntView cumulativeParticlesOverElem("intial-cumulative-particle-distribution",Nel);
     int adjustedTotParticles = 0;

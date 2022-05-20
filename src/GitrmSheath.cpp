@@ -59,11 +59,10 @@ Mesh initializeSheathMesh(int Nel_x,
     Kokkos::View<int*[4]> conn("elem-connectivty",Nel);
     Kokkos::parallel_for("init-elem-connectivty", Nel, KOKKOS_LAMBDA(const int iel){
         int iel_y = iel / Nel_x;
-        int iel_x = iel - iel_y*Nel_x;
-        conn(iel,1) = iel + iel_x;
-        conn(iel,2) = conn(iel,1)+1;
-        conn(iel,3) = conn(iel,2)+1+Nel_x;
-        conn(iel,4) = conn(iel,3)-1;
+        conn(iel,0) = iel + iel_y;
+        conn(iel,1) = conn(iel,0)+1;
+        conn(iel,2) = conn(iel,1)+1+Nel_x;
+        conn(iel,3) = conn(iel,2)-1;
     });
 
     return Mesh(Nel_x,Nel_y,node,conn,Nel,Nnp);
@@ -89,9 +88,16 @@ void Mesh::computeFractionalElementArea(){
     Vector2 e2 = p4-p1;
     Vector2 diag = p3-p1;
 
-    double heightLowerTri = diag.dot(e1);
-    double heightUpperTri = diag.dot(e2);
     double baseTri = diag.magnitude();
+
+    double lambdaLowerTri = diag.dot(e1)/(baseTri*baseTri);
+    double lambdaUpperTri = diag.dot(e2)/(baseTri*baseTri);
+
+    Vector2 hLowerTri = e1-diag*lambdaLowerTri;
+    Vector2 hUpperTri = e2-diag*lambdaUpperTri;
+
+    double heightLowerTri = hLowerTri.magnitude();
+    double heightUpperTri = hUpperTri.magnitude();
 
     fracArea(iel) = 0.5*baseTri*(heightLowerTri+heightUpperTri);
     update += fracArea(iel);
