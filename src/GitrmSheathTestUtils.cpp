@@ -48,14 +48,14 @@ Particles initializeParticles(int numParticles, Mesh meshObj, unsigned int rngSe
         int ipartOffset = cumulativeParticlesOverElem(iel);
 
         for (int ipart=0; ipart < initialParticlesPerElem(iel); ipart++){
-            double lambda = Kokkos::rand<RandGen, double>::draw(rgen, -1.0, 1.0);
-            double mu = Kokkos::rand<RandGen, double>::draw(rgen, -1.0, 1.0);
+            double lambda = Kokkos::rand<RandGen, double>::draw(rgen, 0.0, 1.0);
+            double mu = Kokkos::rand<RandGen, double>::draw(rgen, 0.0, 1.0);
 
             double l1,l2,l3,l4;
-            l1 = (1-lambda)*(1-mu)/4;
-            l2 = lambda*(1-mu)/4;
-            l3 = lambda*mu/4;
-            l4 = (1-lambda)*mu/4;
+            l1 = (1.0-lambda)*(1.0-mu);
+            l2 = lambda*(1.0-mu);
+            l3 = lambda*mu;
+            l4 = (1.0-lambda)*mu;
 
             Vector2 pos = v1*l1 + v2*l2 + v3*l3 + v4*l4;
 
@@ -86,6 +86,28 @@ Vector2View Particles::getParticlePostions(){
 
 IntView Particles::getParticleElementIDs(){
     return elementIDs_;
+}
+
+void Particles::validateP2LAlgo(){
+    auto meshObj = getMeshObj();
+    auto nodes = meshObj.getNodesVector();
+    auto conn = meshObj.getConnectivity();
+    int Nel = meshObj.getTotalElements();
+    int numParticles = getTotalParticles();
+    auto xp = getParticlePostions();
+    auto eID = getParticleElementIDs();
+    Kokkos::parallel_for("locate-particles",numParticles,KOKKOS_LAMBDA(const int ipart){
+        int iel = eID(ipart);
+        bool located = P2LCheck(xp(ipart),
+                                nodes(conn(iel,0)),
+                                nodes(conn(iel,1)),
+                                nodes(conn(iel,2)),
+                                nodes(conn(iel,3)));
+        if (located)
+            printf("ipart=%d -- located\n",ipart);
+        else
+            printf("NOT LOCATED\n");
+    });
 }
 
 
