@@ -18,6 +18,8 @@
 #include <ctime>
 
 #include <Kokkos_Core.hpp>
+#include <Kokkos_Random.hpp>
+
 #include "GitrmSheathUtils.hpp"
 
 namespace sheath {
@@ -25,6 +27,8 @@ namespace sheath {
 using Vector2View = Kokkos::View<Vector2*>;
 using Int4View = Kokkos::View<int*[4]>;
 using DoubleView = Kokkos::View<double*>;
+using IntView = Kokkos::View<int*>;
+
 
 class Mesh{
 private:
