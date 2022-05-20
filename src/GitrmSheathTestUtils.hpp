@@ -20,15 +20,13 @@ public:
 
     Particles(int numParticles,
               Mesh meshObj,
-              Vector2View positions:
+              Vector2View positions):
               numParticles_(numParticles),
               meshObj_(meshObj),
               positions_(positions){};
 
-    )
-
 };
 
 Particles initializeParticles(int numParticles, Mesh meshObj);
-
+}
 #endif
