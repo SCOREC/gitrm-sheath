@@ -18,6 +18,8 @@ int main( int argc, char* argv[] )
         sheath::Mesh meshObj = sheath::initializeSheathMesh(Nel_x,Nel_y,nodeFile);
         sheath::Particles partObj = sheath::initializeParticles(10000,meshObj,1234);
 
+        partObj.validateP2LAlgo();
+
         printf("Total nodes is %d\n",meshObj.getTotalNodes() );
         printf("Total particles is %d\n",partObj.getTotalParticles() );
 

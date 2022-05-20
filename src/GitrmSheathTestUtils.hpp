@@ -17,6 +17,7 @@ public:
     Mesh getMeshObj();
     Vector2View getParticlePostions();
     IntView getParticleElementIDs();
+    void validateP2LAlgo();
 
     Particles(){};
 
@@ -32,6 +33,7 @@ public:
 };
 
 Particles initializeParticles(int numParticles, Mesh meshObj, unsigned int rngSeed);
+
 
 }
 
