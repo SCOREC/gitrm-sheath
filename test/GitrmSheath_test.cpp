@@ -6,7 +6,7 @@ int main( int argc, char* argv[] )
 {
     Kokkos::initialize( argc, argv );
     {
-        if (argc != 8)
+        if (argc != 4)
         {
             print_usage();
         }
@@ -15,7 +15,9 @@ int main( int argc, char* argv[] )
         int Nel_y = atoi( argv[2] );
         std::string nodeFile = argv[3];
 
-        sheath::initializeSheathMesh(Nel_x,Nel_y,nodeFile);
+        sheath::Mesh meshObj = sheath::initializeSheathMesh(Nel_x,Nel_y,nodeFile);
+
+        printf("Total nodes is %d\n",meshObj.getTotalNodes() );
 
     }
     Kokkos::finalize();

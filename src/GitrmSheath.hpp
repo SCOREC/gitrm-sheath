@@ -23,13 +23,14 @@
 namespace sheath {
 
 using Vector2View = Kokkos::View<Vector2*>;
+using Int4View = Kokkos::View<int*[4]>;
 
 class Mesh{
 private:
     int Nel_x_;
     int Nel_y_;
     Vector2View nodes_;
-    Kokkos::View<int*[4]> conn_;
+    Int4View conn_;
 
 public:
     Mesh(){};
@@ -37,11 +38,17 @@ public:
     Mesh(int Nel_x,
          int Nel_y,
          Vector2View nodes,
-         Kokkos::View<int*[4]> conn):
+         Int4View conn):
          Nel_x_(Nel_x),
          Nel_y_(Nel_y),
          nodes_(nodes),
          conn_(conn){};
+
+    int getTotalNodes();
+    int getTotalElements();
+    Vector2View getNodesVector();
+    Int4View getConnectivity();
+
 };
 
 Mesh initializeSheathMesh(int Nel_x,

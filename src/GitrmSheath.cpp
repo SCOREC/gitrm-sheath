@@ -2,6 +2,24 @@
 
 namespace sheath {
 
+int Mesh::getTotalNodes(){
+    int Nnp = nodes_.extent(0);
+    return Nnp;
+}
+
+int Mesh::getTotalElements(){
+    int Nnp = conn_.extent(0);
+    return Nnp;
+}
+
+Vector2View Mesh::getNodesVector(){
+    return nodes_;
+}
+
+Int4View Mesh::getConnectivity(){
+    return conn_;
+}
+
 Mesh initializeSheathMesh(int Nel_x,
                           int Nel_y,
                           std::string coord_file){
