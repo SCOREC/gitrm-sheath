@@ -57,4 +57,6 @@ Mesh initializeSheathMesh(int Nel_x,
 
 } // namespace sheath
 
+#include "GitrmSheathTestUtils.hpp"
+
 #endif
