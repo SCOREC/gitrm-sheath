@@ -16,6 +16,7 @@ int main( int argc, char* argv[] )
         std::string nodeFile = argv[3];
 
         sheath::Mesh meshObj = sheath::initializeSheathMesh(Nel_x,Nel_y,nodeFile);
+        sheath::Particles partObj = sheath::initializeParticles(1000000,meshObj);
 
         printf("Total nodes is %d\n",meshObj.getTotalNodes() );
 
