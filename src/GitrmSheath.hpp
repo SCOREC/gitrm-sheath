@@ -29,6 +29,9 @@ using Int4View = Kokkos::View<int*[4]>;
 using DoubleView = Kokkos::View<double*>;
 using IntView = Kokkos::View<int*>;
 
+using RandPool = Kokkos::Random_XorShift64_Pool<>;
+using RandGen  = RandPool::generator_type;
+
 
 class Mesh{
 private:
