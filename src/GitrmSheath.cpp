@@ -2,11 +2,6 @@
 
 namespace sheath {
 
-Mesh dummy(){
-    Mesh m;
-    return m;
-}
-
 Mesh initializeSheathMesh(int Nel_x,
                           int Nel_y,
                           std::string coord_file){
