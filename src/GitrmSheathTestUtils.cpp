@@ -14,7 +14,7 @@ Particles initializeParticles(int numParticles, Mesh meshObj, unsigned int rngSe
 
     Kokkos::parallel_reduce("compute-part-per-elem", Nel, KOKKOS_LAMBDA(const int iel, int& update ){
         double partCount = fracArea(iel)*numParticles;
-        initialParticlesPerElem(iel) = (int) partCount;
+        initialParticlesPerElem(iel) = (int) partCount + 1;
         update += initialParticlesPerElem(iel);
     },adjustedTotParticles);
 
