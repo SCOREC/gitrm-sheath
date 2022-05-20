@@ -16,9 +16,10 @@ int main( int argc, char* argv[] )
         std::string nodeFile = argv[3];
 
         sheath::Mesh meshObj = sheath::initializeSheathMesh(Nel_x,Nel_y,nodeFile);
-        sheath::Particles partObj = sheath::initializeParticles(1000000,meshObj);
+        sheath::Particles partObj = sheath::initializeParticles(10000,meshObj,1234);
 
         printf("Total nodes is %d\n",meshObj.getTotalNodes() );
+        printf("Total particles is %d\n",partObj.getTotalParticles() );
 
     }
     Kokkos::finalize();
