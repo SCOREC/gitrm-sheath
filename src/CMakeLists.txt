@@ -1,10 +1,12 @@
 set(HEADERS
   GitrmSheath.hpp
   GitrmSheathUtils.hpp
+  GitrmSheathTestUtils.hpp
 )
 
 set(SOURCES
   GitrmSheath.cpp
+  GitrmSheathTestUtils.cpp
 )
 
 add_library (gitrmsheath-core ${SOURCES})
