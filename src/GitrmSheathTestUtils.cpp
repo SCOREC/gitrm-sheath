@@ -48,17 +48,14 @@ Particles initializeParticles(int numParticles, Mesh meshObj, unsigned int rngSe
         int ipartOffset = cumulativeParticlesOverElem(iel);
 
         for (int ipart=0; ipart < initialParticlesPerElem(iel); ipart++){
-            double l1 = Kokkos::rand<RandGen, double>::draw(rgen, 0.0, 1.0);
-            double l2 = Kokkos::rand<RandGen, double>::draw(rgen, 0.0, 1.0);
-            double l3 = Kokkos::rand<RandGen, double>::draw(rgen, 0.0, 1.0);
-            double l4 = Kokkos::rand<RandGen, double>::draw(rgen, 0.0, 1.0);
+            double lambda = Kokkos::rand<RandGen, double>::draw(rgen, -1.0, 1.0);
+            double mu = Kokkos::rand<RandGen, double>::draw(rgen, -1.0, 1.0);
 
-            double sum = l1+l2+l3+l4;
-
-            l1 /= sum;
-            l2 /= sum;
-            l3 /= sum;
-            l4 /= sum;
+            double l1,l2,l3,l4;
+            l1 = (1-lambda)*(1-mu)/4;
+            l2 = lambda*(1-mu)/4;
+            l3 = lambda*mu/4;
+            l4 = (1-lambda)*mu/4;
 
             Vector2 pos = v1*l1 + v2*l2 + v3*l3 + v4*l4;
 
