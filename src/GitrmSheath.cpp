@@ -3,13 +3,11 @@
 namespace sheath {
 
 int Mesh::getTotalNodes(){
-    int Nnp = nodes_.extent(0);
-    return Nnp;
+    return nnpTotal_;
 }
 
 int Mesh::getTotalElements(){
-    int Nnp = conn_.extent(0);
-    return Nnp;
+    return nelTotal_;
 }
 
 Vector2View Mesh::getNodesVector(){
@@ -68,7 +66,55 @@ Mesh initializeSheathMesh(int Nel_x,
         conn(iel,4) = conn(iel,3)-1;
     });
 
-    return Mesh(Nel_x,Nel_y,node,conn);
+    return Mesh(Nel_x,Nel_y,node,conn,Nel,Nnp);
+}
+
+void Mesh::computeFractionalElementArea(){
+    int Nel = getTotalElements();
+
+    double totArea = 0.0;
+    auto conn = conn_;
+    auto nodes = nodes_;
+    DoubleView fracArea("fractional-areas",Nel);
+    Kokkos::parallel_reduce("computing-elem-areas",
+                            Nel,
+                            KOKKOS_LAMBDA (const int iel, double& update ){
+
+    Vector2 p1 = nodes(conn(iel,0));
+    Vector2 p2 = nodes(conn(iel,1));
+    Vector2 p3 = nodes(conn(iel,2));
+    Vector2 p4 = nodes(conn(iel,3));
+
+    Vector2 e1 = p2-p1;
+    Vector2 e2 = p4-p1;
+    Vector2 diag = p3-p1;
+
+    double heightLowerTri = diag.dot(e1);
+    double heightUpperTri = diag.dot(e2);
+    double baseTri = diag.magnitude();
+
+    fracArea(iel) = 0.5*baseTri*(heightLowerTri+heightUpperTri);
+    update += fracArea(iel);
+
+    }, totArea);
+
+    totArea_ = totArea;
+
+    Kokkos::parallel_for("computing-fractional-areas",
+                         Nel,
+                         KOKKOS_LAMBDA(const int iel){
+        fracArea(iel) /= totArea;
+    });
+
+    fracArea_ = fracArea;
+}
+
+double Mesh::getTotalArea(){
+    return totArea_;
+}
+
+DoubleView Mesh::getFractionalElementAreas(){
+    return fracArea_;
 }
 
 } // namespace sheath

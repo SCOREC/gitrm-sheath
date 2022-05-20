@@ -24,6 +24,7 @@ namespace sheath {
 
 using Vector2View = Kokkos::View<Vector2*>;
 using Int4View = Kokkos::View<int*[4]>;
+using DoubleView = Kokkos::View<double*>;
 
 class Mesh{
 private:
@@ -31,6 +32,11 @@ private:
     int Nel_y_;
     Vector2View nodes_;
     Int4View conn_;
+    int nnpTotal_;
+    int nelTotal_;
+
+    double totArea_;
+    DoubleView fracArea_;
 
 public:
     Mesh(){};
@@ -38,16 +44,23 @@ public:
     Mesh(int Nel_x,
          int Nel_y,
          Vector2View nodes,
-         Int4View conn):
+         Int4View conn,
+         int nelTotal,
+         int nnpTotal):
          Nel_x_(Nel_x),
          Nel_y_(Nel_y),
          nodes_(nodes),
-         conn_(conn){};
+         conn_(conn),
+         nelTotal_(nelTotal),
+         nnpTotal_(nnpTotal){};
 
     int getTotalNodes();
     int getTotalElements();
     Vector2View getNodesVector();
     Int4View getConnectivity();
+    void computeFractionalElementArea();
+    double getTotalArea();
+    DoubleView getFractionalElementAreas();
 
 };
 
