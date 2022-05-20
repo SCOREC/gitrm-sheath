@@ -75,6 +75,29 @@ Mesh initializeSheathMesh(int Nel_x,
                           int Nel_y,
                           std::string coord_file);
 
+KOKKOS_INLINE_FUNCTION
+bool P2LCheck(Vector2 xp, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
+    Vector2 e1 = v2-v1;
+    Vector2 e2 = v3-v2;
+    Vector2 e3 = v4-v3;
+    Vector2 e4 = v1-v4;
+    Vector2 p1 = xp-v1;
+    Vector2 p2 = xp-v2;
+    Vector2 p3 = xp-v3;
+    Vector2 p4 = xp-v4;
+
+    if (e1.cross(p1) < 0.0)
+        return false;
+    if (e2.cross(p2) < 0.0)
+        return false;
+    if (e3.cross(p3) < 0.0)
+        return false;
+    if (e4.cross(p4) < 0.0)
+        return false;
+
+    return true;
+}
+
 } // namespace sheath
 
 #include "GitrmSheathTestUtils.hpp"
