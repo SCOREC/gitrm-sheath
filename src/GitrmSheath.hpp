@@ -44,8 +44,9 @@ public:
          conn_(conn){};
 };
 
-Mesh dummy();
-
+Mesh initializeSheathMesh(int Nel_x,
+                          int Nel_y,
+                          std::string coord_file);
 
 } // namespace sheath
 
