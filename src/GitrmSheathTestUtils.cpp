@@ -27,7 +27,7 @@ Particles initializeParticles(int numParticles, Mesh meshObj, unsigned int rngSe
             h_cumulativeParticlesOverElem(iel) = 0;
         }
         else{
-            h_cumulativeParticlesOverElem(iel) = h_cumulativeParticlesOverElem(iel-1) + h_initialParticlesPerElem(iel);
+            h_cumulativeParticlesOverElem(iel) = h_cumulativeParticlesOverElem(iel-1) + h_initialParticlesPerElem(iel-1);
         }
     }
     Kokkos::deep_copy(cumulativeParticlesOverElem,h_cumulativeParticlesOverElem);
@@ -97,16 +97,21 @@ void Particles::validateP2LAlgo(){
     auto xp = getParticlePostions();
     auto eID = getParticleElementIDs();
     Kokkos::parallel_for("locate-particles",numParticles,KOKKOS_LAMBDA(const int ipart){
-        int iel = eID(ipart);
-        bool located = P2LCheck(xp(ipart),
+        int iel = 0;
+        bool located = false;
+        while (!located && iel<Nel){
+            located = P2LCheck(xp(ipart),
                                 nodes(conn(iel,0)),
                                 nodes(conn(iel,1)),
                                 nodes(conn(iel,2)),
                                 nodes(conn(iel,3)));
-        if (located)
-            printf("ipart=%d -- located\n",ipart);
-        else
-            printf("NOT LOCATED\n");
+            iel++;
+        }
+
+        if (iel-1 != eID(ipart)){
+            printf("Particle NOT LOCATED\n");
+        }
+
     });
 }
 
