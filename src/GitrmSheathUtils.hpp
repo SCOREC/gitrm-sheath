@@ -3,6 +3,18 @@
 
 
 namespace sheath{
+
+enum Dirxns {
+    none,
+    east,
+    west,
+    north,
+    south,
+};
+
+using FaceDir = Dirxns;
+using BdryDir = Dirxns;
+
 class Vector2 {
 public:
     double components_[2];
@@ -53,6 +65,9 @@ public:
 
     KOKKOS_FUNCTION
     double magnitude();
+
+    KOKKOS_FUNCTION
+    Vector2 rotateCW90();
 };
 
 /**
@@ -187,6 +202,16 @@ KOKKOS_INLINE_FUNCTION
 double Vector2::magnitude() {
     return sqrt(components_[0]*components_[0] +
                 components_[1]*components_[1] );
+}
+
+/**
+ * @brief Vector magnitude.
+ *
+ * @return Vector magnitude.
+ */
+KOKKOS_INLINE_FUNCTION
+Vector2 Vector2::rotateCW90() {
+    return Vector2(-components_[1],components_[0]);
 }
 
 /**
