@@ -10,6 +10,14 @@ int Mesh::getTotalElements(){
     return nelTotal_;
 }
 
+int Mesh::getTotalXElements(){
+    return Nel_x_;
+}
+
+int Mesh::getTotalYElements(){
+    return Nel_y_;
+}
+
 Vector2View Mesh::getNodesVector(){
     return nodes_;
 }
