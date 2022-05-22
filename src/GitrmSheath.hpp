@@ -28,6 +28,7 @@ using Vector2View = Kokkos::View<Vector2*>;
 using Int4View = Kokkos::View<int*[4]>;
 using DoubleView = Kokkos::View<double*>;
 using IntView = Kokkos::View<int*>;
+using BoolView = Kokkos::View<bool*>;
 
 using RandPool = Kokkos::Random_XorShift64_Pool<>;
 using RandGen  = RandPool::generator_type;
@@ -63,6 +64,8 @@ public:
 
     int getTotalNodes();
     int getTotalElements();
+    int getTotalXElements();
+    int getTotalYElements();
     Vector2View getNodesVector();
     Int4View getConnectivity();
     void computeFractionalElementArea();
@@ -96,6 +99,121 @@ bool P2LCheck(Vector2 xp, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
         return false;
 
     return true;
+}
+
+KOKKOS_INLINE_FUNCTION
+FaceDir T2LCheckAllFace(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
+    Vector2 p1 = v1-xp;
+    Vector2 p2 = v2-xp;
+    Vector2 p3 = v3-xp;
+    Vector2 p4 = v4-xp;
+
+    double p1xdx = p1.cross(dx);
+    double p2xdx = p2.cross(dx);
+    if (p1xdx*p2xdx < 0.0)
+        return south;
+    double p3xdx = p3.cross(dx);
+    if (p2xdx*p3xdx < 0.0)
+        return east;
+    double p4xdx = p4.cross(dx);
+    if (p3xdx*p4xdx < 0.0)
+        return north;
+    if (p4xdx*p1xdx < 0.0)
+        return west;
+
+    return none;
+}
+
+KOKKOS_INLINE_FUNCTION
+FaceDir T2LCheckForSouthEntry(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
+    Vector2 p1 = v1-xp;
+    Vector2 p2 = v2-xp;
+    Vector2 p3 = v3-xp;
+    Vector2 p4 = v4-xp;
+
+    double p1xdx = p1.cross(dx);
+    double p2xdx = p2.cross(dx);
+    double p3xdx = p3.cross(dx);
+    if (p2xdx*p3xdx < 0.0)
+        return east;
+    double p4xdx = p4.cross(dx);
+    if (p3xdx*p4xdx < 0.0)
+        return north;
+    if (p4xdx*p1xdx < 0.0)
+        return west;
+
+    return none;
+}
+
+KOKKOS_INLINE_FUNCTION
+FaceDir T2LCheckForWestEntry(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
+    Vector2 p1 = v1-xp;
+    Vector2 p2 = v2-xp;
+    Vector2 p3 = v3-xp;
+    Vector2 p4 = v4-xp;
+
+    double p1xdx = p1.cross(dx);
+    double p2xdx = p2.cross(dx);
+    if (p1xdx*p2xdx < 0.0)
+        return south;
+    double p3xdx = p3.cross(dx);
+    if (p2xdx*p3xdx < 0.0)
+        return east;
+    double p4xdx = p4.cross(dx);
+    if (p3xdx*p4xdx < 0.0)
+        return north;
+
+    return none;
+}
+
+KOKKOS_INLINE_FUNCTION
+FaceDir T2LCheckForNorthEntry(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
+    Vector2 p1 = v1-xp;
+    Vector2 p2 = v2-xp;
+    Vector2 p3 = v3-xp;
+    Vector2 p4 = v4-xp;
+
+    double p1xdx = p1.cross(dx);
+    double p2xdx = p2.cross(dx);
+    if (p1xdx*p2xdx < 0.0)
+        return south;
+    double p3xdx = p3.cross(dx);
+    if (p2xdx*p3xdx < 0.0)
+        return east;
+    double p4xdx = p4.cross(dx);
+    if (p4xdx*p1xdx < 0.0)
+        return west;
+
+    return none;
+}
+
+KOKKOS_INLINE_FUNCTION
+FaceDir T2LCheckForEastEntry(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
+    Vector2 p1 = v1-xp;
+    Vector2 p2 = v2-xp;
+    Vector2 p3 = v3-xp;
+    Vector2 p4 = v4-xp;
+
+    double p1xdx = p1.cross(dx);
+    double p2xdx = p2.cross(dx);
+    if (p1xdx*p2xdx < 0.0)
+        return south;
+    double p3xdx = p3.cross(dx);
+    double p4xdx = p4.cross(dx);
+    if (p3xdx*p4xdx < 0.0)
+        return north;
+    if (p4xdx*p1xdx < 0.0)
+        return west;
+
+    return none;
+}
+
+KOKKOS_INLINE_FUNCTION
+Vector2 findIntersectionPoint(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2){
+    Vector2 fCenter = (v1+v2)*0.5;
+    Vector2 fNormal = (v2-v1).rotateCW90();
+    double lambda = ((fCenter-xp).dot(fNormal))/(dx.dot(fNormal));
+    return (xp + dx*lambda);
 }
 
 } // namespace sheath
