@@ -15,13 +15,19 @@ int main( int argc, char* argv[] )
         int Nel_y = atoi( argv[2] );
         std::string nodeFile = argv[3];
 
+        int numParticles = 10000;
+        int rngSeed = 1234;
+
         sheath::Mesh meshObj = sheath::initializeSheathMesh(Nel_x,Nel_y,nodeFile);
-        sheath::Particles partObj = sheath::initializeParticles(10000,meshObj,1234);
+        sheath::Particles partObj = sheath::initializeParticles(numParticles,meshObj,rngSeed);
+        sheath::Vector2View disp = sheath::getRandDisplacements(numParticles,rngSeed,1.0);
 
         partObj.validateP2LAlgo();
-
-        printf("Total nodes is %d\n",meshObj.getTotalNodes() );
-        printf("Total particles is %d\n",partObj.getTotalParticles() );
+        int numActiveParticles = partObj.computeTotalActiveParticles();
+        printf("Total particles before push %d\n",numActiveParticles );
+        partObj.T2LTracking(disp);
+        numActiveParticles = partObj.computeTotalActiveParticles();
+        printf("Total particles after push %d\n",numActiveParticles );
 
     }
     Kokkos::finalize();
