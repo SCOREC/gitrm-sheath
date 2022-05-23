@@ -1,6 +1,8 @@
 #include "GitrmSheath.hpp"
 
 void print_usage();
+void print_particle_state(sheath::Particles partObj, int iTime);
+
 
 int main( int argc, char* argv[] )
 {
@@ -26,10 +28,12 @@ int main( int argc, char* argv[] )
         int numActiveParticles = partObj.computeTotalActiveParticles();
         int iTime = 0;
         printf("Total particles at T=%d is %d\n",iTime, numActiveParticles );
+        print_particle_state(partObj,iTime);
         while(numActiveParticles > 0 && iTime<10){
             iTime++;
             partObj.T2LTracking(disp);
             numActiveParticles = partObj.computeTotalActiveParticles();
+            print_particle_state(partObj,iTime);
             printf("Total particles at T=%d is %d\n",iTime, numActiveParticles);
         }
         // partObj.MacphersonTracking(disp);
@@ -55,4 +59,32 @@ void print_usage()
     printf("    ./install/bin/GitrmSheath_Demo 32 56 node_coordinates.dat 100000 1234 0.5\n\n");
     Kokkos::finalize();
     exit(0);
+}
+
+void print_particle_state(sheath::Particles partObj, int iTime){
+    int numParticles = partObj.getTotalParticles();
+    auto xp = partObj.getParticlePostions();
+    auto eID = partObj.getParticleElementIDs();
+    auto status = partObj.getParticleStatus();
+    printf("numParticles = %d\n",numParticles );
+
+    auto h_xp = Kokkos::create_mirror_view(xp);
+    Kokkos::deep_copy(h_xp,xp);
+    auto h_eID = Kokkos::create_mirror_view(eID);
+    Kokkos::deep_copy(h_eID,eID);
+    auto h_status = Kokkos::create_mirror_view(status);
+    Kokkos::deep_copy(h_status,status);
+
+    FILE *part_file;
+    char part_filename[30];
+    sprintf(part_filename,"part_coords_t%d.dat",iTime);
+    part_file = fopen(part_filename,"w");
+    int skip = 1;
+    for (int i=0; i<numParticles; i=i+skip){
+        int part_active = h_status(i);
+        int elemID = h_eID(i);
+        fprintf(part_file, "%d %.5e %.5e %d\n", part_active, h_xp(i)[0], h_xp(i)[1], elemID);
+    }
+
+    fclose(part_file);
 }
