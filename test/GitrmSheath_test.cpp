@@ -26,6 +26,7 @@ int main( int argc, char* argv[] )
         int numActiveParticles = partObj.computeTotalActiveParticles();
         printf("Total particles before push %d\n",numActiveParticles );
         partObj.T2LTracking(disp);
+        // partObj.MacphersonTracking(disp);
         numActiveParticles = partObj.computeTotalActiveParticles();
         printf("Total particles after push %d\n",numActiveParticles );
 

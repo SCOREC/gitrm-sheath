@@ -220,6 +220,242 @@ Vector2 findIntersectionPoint(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2){
     return (xp + dx*lambda);
 }
 
+KOKKOS_INLINE_FUNCTION
+double findIntersectionLambda(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2){
+    Vector2 fCenter = (v1+v2)*0.5;
+    Vector2 fNormal = (v2-v1).rotateCW90();
+    return ((fCenter-xp).dot(fNormal))/(dx.dot(fNormal));
+}
+
+KOKKOS_INLINE_FUNCTION
+FaceDir minValueFaceDir(double l1, double l2, double l3, double l4){
+    if (l1 <= l2){
+        if (l1 <= l3){
+            if (l1 <= l4){
+                return south;
+            }
+            else{
+                return west;
+            }
+        }
+        else{
+            if (l3 <= l4){
+                return north;
+            }
+            else{
+                return west;
+            }
+        }
+    }
+    else {
+        if (l2 <= l3){
+            if (l2 <= l4){
+                return east;
+            }
+            else{
+                return west;
+            }
+        }
+        else{
+            if (l3 <= l4){
+                return north;
+            }
+            else {
+                return west;
+            }
+        }
+    }
+    return none;
+}
+
+KOKKOS_INLINE_FUNCTION
+FaceDir MacphersonCheckAllFace(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
+    bool crossedEast = false;
+    bool crossedWest = false;
+    bool crossedNorth = false;
+    bool crossedSouth = false;
+    double l1 = findIntersectionLambda(xp,dx,v1,v2);
+    if (l1 > 0.0 && l1 < 1.0){
+        crossedSouth = true;
+    }
+    else{
+        l1 = 1.0;
+    }
+    double l2 = findIntersectionLambda(xp,dx,v2,v3);
+    if (l2 > 0.0 && l2 < 1.0){
+        crossedEast = true;
+    }
+    else{
+        l2 = 1.0;
+    }
+    double l3 = findIntersectionLambda(xp,dx,v3,v4);
+    if (l3 > 0.0 && l3 < 1.0){
+        crossedNorth = true;
+    }
+    else{
+        l3 = 1.0;
+    }
+    double l4 = findIntersectionLambda(xp,dx,v4,v1);
+    if (l4 > 0.0 && l4 < 1.0){
+        crossedWest = true;
+    }
+    else{
+        l4 = 1.0;
+    }
+
+    if (!crossedEast && !crossedWest && !crossedNorth && !crossedSouth){
+        return none;
+    }
+    else{
+        return minValueFaceDir(l1,l2,l3,l4);
+    }
+}
+
+KOKKOS_INLINE_FUNCTION
+FaceDir MacphersonCheckForEastEntry(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
+    bool crossedEast = false;
+    bool crossedNorth = false;
+    bool crossedSouth = false;
+    double l1 = findIntersectionLambda(xp,dx,v1,v2);
+    if (l1 > 0.0 && l1 < 1.0){
+        crossedSouth = true;
+    }
+    else{
+        l1 = 1.0;
+    }
+    double l2 = findIntersectionLambda(xp,dx,v2,v3);
+    if (l2 > 0.0 && l2 < 1.0){
+        crossedEast = true;
+    }
+    else{
+        l2 = 1.0;
+    }
+    double l3 = findIntersectionLambda(xp,dx,v3,v4);
+    if (l3 > 0.0 && l3 < 1.0){
+        crossedNorth = true;
+    }
+    else{
+        l3 = 1.0;
+    }
+    double l4 = 1.0;
+
+    if (!crossedEast && !crossedNorth && !crossedSouth){
+        return none;
+    }
+    else{
+        return minValueFaceDir(l1,l2,l3,l4);
+    }
+}
+
+KOKKOS_INLINE_FUNCTION
+FaceDir MacphersonCheckForWestEntry(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
+    bool crossedWest = false;
+    bool crossedNorth = false;
+    bool crossedSouth = false;
+    double l1 = findIntersectionLambda(xp,dx,v1,v2);
+    if (l1 > 0.0 && l1 < 1.0){
+        crossedSouth = true;
+    }
+    else{
+        l1 = 1.0;
+    }
+    double l2 = 1.0;
+
+    double l3 = findIntersectionLambda(xp,dx,v3,v4);
+    if (l3 > 0.0 && l3 < 1.0){
+        crossedNorth = true;
+    }
+    else{
+        l3 = 1.0;
+    }
+    double l4 = findIntersectionLambda(xp,dx,v4,v1);
+    if (l4 > 0.0 && l4 < 1.0){
+        crossedWest = true;
+    }
+    else{
+        l4 = 1.0;
+    }
+
+    if (!crossedWest && !crossedNorth && !crossedSouth){
+        return none;
+    }
+    else{
+        return minValueFaceDir(l1,l2,l3,l4);
+    }
+}
+
+KOKKOS_INLINE_FUNCTION
+FaceDir MacphersonCheckForSouthEntry(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
+    bool crossedEast = false;
+    bool crossedWest = false;
+    bool crossedSouth = false;
+    double l1 = findIntersectionLambda(xp,dx,v1,v2);
+    if (l1 > 0.0 && l1 < 1.0){
+        crossedSouth = true;
+    }
+    else{
+        l1 = 1.0;
+    }
+    double l2 = findIntersectionLambda(xp,dx,v2,v3);
+    if (l2 > 0.0 && l2 < 1.0){
+        crossedEast = true;
+    }
+    else{
+        l2 = 1.0;
+    }
+    double l3 = 1.0;
+    double l4 = findIntersectionLambda(xp,dx,v4,v1);
+    if (l4 > 0.0 && l4 < 1.0){
+        crossedWest = true;
+    }
+    else{
+        l4 = 1.0;
+    }
+
+    if (!crossedEast && !crossedWest && !crossedSouth){
+        return none;
+    }
+    else{
+        return minValueFaceDir(l1,l2,l3,l4);
+    }
+}
+
+KOKKOS_INLINE_FUNCTION
+FaceDir MacphersonCheckForNorthEntry(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
+    bool crossedEast = false;
+    bool crossedWest = false;
+    bool crossedNorth = false;
+    double l1 = 1.0;
+    double l2 = findIntersectionLambda(xp,dx,v2,v3);
+    if (l2 > 0.0 && l2 < 1.0){
+        crossedEast = true;
+    }
+    else{
+        l2 = 1.0;
+    }
+    double l3 = findIntersectionLambda(xp,dx,v3,v4);
+    if (l3 > 0.0 && l3 < 1.0){
+        crossedNorth = true;
+    }
+    else{
+        l3 = 1.0;
+    }
+    double l4 = findIntersectionLambda(xp,dx,v4,v1);
+    if (l4 > 0.0 && l4 < 1.0){
+        crossedWest = true;
+    }
+    else{
+        l4 = 1.0;
+    }
+
+    if (!crossedEast && !crossedWest && !crossedNorth){
+        return none;
+    }
+    else{
+        return minValueFaceDir(l1,l2,l3,l4);
+    }
+}
+
 } // namespace sheath
 
 #include "GitrmSheathTestUtils.hpp"

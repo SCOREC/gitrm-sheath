@@ -303,17 +303,93 @@ void Particles::T2LTracking(Vector2View dx){
     });
 }
 
-// void Particles::MacphersonTracking(Vector2View dx){
-//     auto meshObj = getMeshObj();
-//     auto nodes = meshObj.getNodesVector();
-//     auto conn = meshObj.getConnectivity();
-//     int Nel_x = meshObj.getTotalXElements();
-//     int Nel_y = meshObj.getTotalYElements();
-//     int numParticles = getTotalParticles();
-//     auto xp = getParticlePostions();
-//     auto eID = getParticleElementIDs();
-//     auto status = getParticleStatus();
-//
-// }
+void Particles::MacphersonTracking(Vector2View dx){
+    auto meshObj = getMeshObj();
+    auto nodes = meshObj.getNodesVector();
+    auto conn = meshObj.getConnectivity();
+    auto elemFaceBdry = meshObj.getElemFaceBdry();
+    int Nel_x = meshObj.getTotalXElements();
+    int Nel_y = meshObj.getTotalYElements();
+    int numParticles = getTotalParticles();
+    auto xp = getParticlePostions();
+    auto eID = getParticleElementIDs();
+    auto status = getParticleStatus();
+
+    Kokkos::parallel_for("Macpherson-Tracking",numParticles,KOKKOS_LAMBDA(const int ipart){
+        if (status(ipart)){
+            int iel = eID(ipart);
+            Vector2 xnew = xp(ipart)+dx(ipart);
+            FaceDir exitFace = MacphersonCheckAllFace(xp(ipart),
+                                            dx(ipart),
+                                            nodes(conn(iel,0)),
+                                            nodes(conn(iel,1)),
+                                            nodes(conn(iel,2)),
+                                            nodes(conn(iel,3)));
+            bool inDomain = true;
+            bool located = false;
+            if (exitFace == none)
+                located = true;
+
+            while(!located){
+                if (elemFaceBdry(iel,exitFace)){
+                    located = true;
+                    inDomain = false;
+                    break;
+                }
+                switch (exitFace) {
+                    case east:{
+                        iel++;
+                        exitFace = MacphersonCheckForEastEntry(xp(ipart),
+                                                        dx(ipart),
+                                                        nodes(conn(iel,0)),
+                                                        nodes(conn(iel,1)),
+                                                        nodes(conn(iel,2)),
+                                                        nodes(conn(iel,3)));
+                        break;
+                    }
+                    case west:{
+                        iel--;
+                        exitFace = MacphersonCheckForWestEntry(xp(ipart),
+                                                        dx(ipart),
+                                                        nodes(conn(iel,0)),
+                                                        nodes(conn(iel,1)),
+                                                        nodes(conn(iel,2)),
+                                                        nodes(conn(iel,3)));
+                        break;
+                    }
+                    case north:{
+                        iel += Nel_x;
+                        exitFace = MacphersonCheckForNorthEntry(xp(ipart),
+                                                        dx(ipart),
+                                                        nodes(conn(iel,0)),
+                                                        nodes(conn(iel,1)),
+                                                        nodes(conn(iel,2)),
+                                                        nodes(conn(iel,3)));
+                        break;
+                    }
+                    case south:{
+                        iel -= Nel_x;
+                        exitFace = MacphersonCheckForSouthEntry(xp(ipart),
+                                                        dx(ipart),
+                                                        nodes(conn(iel,0)),
+                                                        nodes(conn(iel,1)),
+                                                        nodes(conn(iel,2)),
+                                                        nodes(conn(iel,3)));
+                        break;
+                    }
+                    case none:{
+                        // printf("ipart - %d -- LOCATED\n",ipart );
+                        located = true;
+                        break;
+                    }
+                }
+            }
+            eID(ipart) = iel;
+            xp(ipart) = xnew;
+            status(ipart) = inDomain;
+        }
+    });
+
+}
 
 }
