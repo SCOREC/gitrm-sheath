@@ -22,14 +22,17 @@ int main( int argc, char* argv[] )
         sheath::Particles partObj = sheath::initializeParticles(numParticles,meshObj,rngSeed);
         sheath::Vector2View disp = sheath::getRandDisplacements(numParticles,rngSeed,scale);
 
-        partObj.validateP2LAlgo();
+        // partObj.validateP2LAlgo();
         int numActiveParticles = partObj.computeTotalActiveParticles();
-        printf("Total particles before push %d\n",numActiveParticles );
-        partObj.T2LTracking(disp);
+        int iTime = 0;
+        printf("Total particles at T=%d is %d\n",iTime, numActiveParticles );
+        while(numActiveParticles > 0 && iTime<10){
+            iTime++;
+            partObj.T2LTracking(disp);
+            numActiveParticles = partObj.computeTotalActiveParticles();
+            printf("Total particles at T=%d is %d\n",iTime, numActiveParticles);
+        }
         // partObj.MacphersonTracking(disp);
-        numActiveParticles = partObj.computeTotalActiveParticles();
-        printf("Total particles after push %d\n",numActiveParticles );
-
     }
     Kokkos::finalize();
 

@@ -190,33 +190,7 @@ void Particles::T2LTracking(Vector2View dx){
                 //     inDomain = false;
                 //     break;
                 // }
-                // else if (iel_x == Nel_x-1 && exitFace==east){
-                //     xnew = findIntersectionPoint(xp(ipart),
-                //                                 dx(ipart),
-                //                                 nodes(conn(iel,1)),
-                //                                 nodes(conn(iel,2)));
-                //     located = true;
-                //     inDomain = false;
-                //     break;
-                // }
-                // else if (iel_y == 0 && exitFace==south){
-                //     xnew = findIntersectionPoint(xp(ipart),
-                //                                 dx(ipart),
-                //                                 nodes(conn(iel,0)),
-                //                                 nodes(conn(iel,1)));
-                //     located = true;
-                //     inDomain = false;
-                //     break;
-                // }
-                // else if (iel_y == Nel_y-1 && exitFace==north){
-                //     xnew = findIntersectionPoint(xp(ipart),
-                //                                 dx(ipart),
-                //                                 nodes(conn(iel,2)),
-                //                                 nodes(conn(iel,3)));
-                //     located = true;
-                //     inDomain = false;
-                //     break;
-                // }
+                
                 if (elemFaceBdry(iel,exitFace)){
                     located = true;
                     inDomain = false;
