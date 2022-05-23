@@ -6,7 +6,7 @@ int main( int argc, char* argv[] )
 {
     Kokkos::initialize( argc, argv );
     {
-        if (argc != 4)
+        if (argc != 7)
         {
             print_usage();
         }
@@ -14,13 +14,13 @@ int main( int argc, char* argv[] )
         int Nel_x = atoi( argv[1] );
         int Nel_y = atoi( argv[2] );
         std::string nodeFile = argv[3];
-
-        int numParticles = 10000;
-        int rngSeed = 1234;
+        int numParticles = atoi(argv[4]);
+        int rngSeed = atoi(argv[5]);
+        double scale = atof(argv[6]);
 
         sheath::Mesh meshObj = sheath::initializeSheathMesh(Nel_x,Nel_y,nodeFile);
         sheath::Particles partObj = sheath::initializeParticles(numParticles,meshObj,rngSeed);
-        sheath::Vector2View disp = sheath::getRandDisplacements(numParticles,rngSeed,1.0);
+        sheath::Vector2View disp = sheath::getRandDisplacements(numParticles,rngSeed,scale);
 
         partObj.validateP2LAlgo();
         int numActiveParticles = partObj.computeTotalActiveParticles();
@@ -43,10 +43,13 @@ void print_usage()
     printf("\t Nel_x     \t\t Total Number of elements in hPIC mesh along the x1-direction \n");
     printf("\t Nel_y     \t\t Total Number of elements in hPIC mesh along the x2-direction \n");
     printf("\t \"nodeCoordFile.dat\" \t\t Location to file containing mapped node coordinates in the poloidal plane\n" );
+    printf("\t Npart     \t\t Total particles initialized in domain\n" );
+    printf("\t seed      \t\t Seed of random number generator\n" );
+    printf("\t scale     \t\t Scaling factor for particle push\n" );
     printf("  E.g.#1 \n\n");
-    printf("    ./install/bin/GitrmSheath_Demo 32 56 node_coordinates.dat \n\n");
+    printf("    ./install/bin/GitrmSheath_Demo 32 56 node_coordinates.dat 10000 1234 10.0\n\n");
     printf("  E.g.#2 \n\n");
-    printf("    ./install/bin/GitrmSheath_Demo 32 56 node_coordinates.dat \n\n");
+    printf("    ./install/bin/GitrmSheath_Demo 32 56 node_coordinates.dat 100000 1234 0.5\n\n");
     Kokkos::finalize();
     exit(0);
 }
