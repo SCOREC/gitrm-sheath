@@ -106,109 +106,37 @@ bool P2LCheck(Vector2 xp, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
 }
 
 KOKKOS_INLINE_FUNCTION
-FaceDir T2LCheckAllFace(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
+FaceDir T2LCheck(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
+    Vector2 xnew = xp+dx;
     Vector2 p1 = v1-xp;
     Vector2 p2 = v2-xp;
     Vector2 p3 = v3-xp;
     Vector2 p4 = v4-xp;
+    Vector2 e1 = v2-v1;
+    Vector2 e2 = v3-v2;
+    Vector2 e3 = v4-v3;
+    Vector2 e4 = v1-v4;
 
     double p1xdx = p1.cross(dx);
     double p2xdx = p2.cross(dx);
-    if (p1xdx*p2xdx < 0.0)
-        return south;
+    if (p1xdx*p2xdx < 0.0){
+        if (e1.cross(xnew-v1) < 0.0)
+            return south;
+    }
     double p3xdx = p3.cross(dx);
-    if (p2xdx*p3xdx < 0.0)
-        return east;
+    if (p2xdx*p3xdx < 0.0){
+        if (e2.cross(xnew-v2) < 0.0)
+            return east;
+    }
     double p4xdx = p4.cross(dx);
-    if (p3xdx*p4xdx < 0.0)
-        return north;
-    if (p4xdx*p1xdx < 0.0)
-        return west;
-
-    return none;
-}
-
-KOKKOS_INLINE_FUNCTION
-FaceDir T2LCheckForSouthEntry(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
-    Vector2 p1 = v1-xp;
-    Vector2 p2 = v2-xp;
-    Vector2 p3 = v3-xp;
-    Vector2 p4 = v4-xp;
-
-    double p1xdx = p1.cross(dx);
-    double p2xdx = p2.cross(dx);
-    double p3xdx = p3.cross(dx);
-    if (p2xdx*p3xdx < 0.0)
-        return east;
-    double p4xdx = p4.cross(dx);
-    if (p3xdx*p4xdx < 0.0)
-        return north;
-    if (p4xdx*p1xdx < 0.0)
-        return west;
-
-    return none;
-}
-
-KOKKOS_INLINE_FUNCTION
-FaceDir T2LCheckForWestEntry(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
-    Vector2 p1 = v1-xp;
-    Vector2 p2 = v2-xp;
-    Vector2 p3 = v3-xp;
-    Vector2 p4 = v4-xp;
-
-    double p1xdx = p1.cross(dx);
-    double p2xdx = p2.cross(dx);
-    if (p1xdx*p2xdx < 0.0)
-        return south;
-    double p3xdx = p3.cross(dx);
-    if (p2xdx*p3xdx < 0.0)
-        return east;
-    double p4xdx = p4.cross(dx);
-    if (p3xdx*p4xdx < 0.0)
-        return north;
-
-    return none;
-}
-
-KOKKOS_INLINE_FUNCTION
-FaceDir T2LCheckForNorthEntry(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
-    Vector2 p1 = v1-xp;
-    Vector2 p2 = v2-xp;
-    Vector2 p3 = v3-xp;
-    Vector2 p4 = v4-xp;
-
-    double p1xdx = p1.cross(dx);
-    double p2xdx = p2.cross(dx);
-    if (p1xdx*p2xdx < 0.0)
-        return south;
-    double p3xdx = p3.cross(dx);
-    if (p2xdx*p3xdx < 0.0)
-        return east;
-    double p4xdx = p4.cross(dx);
-    if (p4xdx*p1xdx < 0.0)
-        return west;
-
-    return none;
-}
-
-KOKKOS_INLINE_FUNCTION
-FaceDir T2LCheckForEastEntry(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
-    Vector2 p1 = v1-xp;
-    Vector2 p2 = v2-xp;
-    Vector2 p3 = v3-xp;
-    Vector2 p4 = v4-xp;
-
-    double p1xdx = p1.cross(dx);
-    double p2xdx = p2.cross(dx);
-    if (p1xdx*p2xdx < 0.0)
-        return south;
-    double p3xdx = p3.cross(dx);
-    double p4xdx = p4.cross(dx);
-    if (p3xdx*p4xdx < 0.0)
-        return north;
-    if (p4xdx*p1xdx < 0.0)
-        return west;
-
+    if (p3xdx*p4xdx < 0.0){
+        if (e3.cross(xnew-v3) < 0.0)
+            return north;
+    }
+    if (p4xdx*p1xdx < 0.0){
+        if (e4.cross(xnew-v4) < 0.0)
+            return west;
+    }
     return none;
 }
 
