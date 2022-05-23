@@ -22,6 +22,7 @@ int main( int argc, char* argv[] )
 
         sheath::Mesh meshObj = sheath::initializeSheathMesh(Nel_x,Nel_y,nodeFile);
         sheath::Particles partObj = sheath::initializeParticles(numParticles,meshObj,rngSeed);
+        numParticles = partObj.getTotalParticles();
         sheath::Vector2View disp = sheath::getRandDisplacements(numParticles,rngSeed,scale);
 
         // partObj.validateP2LAlgo();
