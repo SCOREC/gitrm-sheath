@@ -21,9 +21,9 @@ int main( int argc, char* argv[] )
         double scale = atof(argv[6]);
 
         sheath::Mesh meshObj = sheath::initializeSheathMesh(Nel_x,Nel_y,nodeFile);
-        // sheath::Particles partObj = sheath::initializeParticles(numParticles,meshObj,rngSeed);
-        // numParticles = partObj.getTotalParticles();
-        sheath::Particles partObj = sheath::initializeSingleParticle(meshObj,rngSeed);
+        sheath::Particles partObj = sheath::initializeParticles(numParticles,meshObj,rngSeed);
+        numParticles = partObj.getTotalParticles();
+        // sheath::Particles partObj = sheath::initializeSingleParticle(meshObj,rngSeed);
         numParticles = partObj.getTotalParticles();
         sheath::Vector2View disp = sheath::getRandDisplacements(numParticles,rngSeed,scale);
 
@@ -35,6 +35,7 @@ int main( int argc, char* argv[] )
         while(numActiveParticles > 0 && iTime<10){
             iTime++;
             partObj.T2LTracking(disp);
+            // partObj.T2LTrackingDebug(disp);
             numActiveParticles = partObj.computeTotalActiveParticles();
             print_particle_state(partObj,iTime);
             printf("Total particles at T=%d is %d\n",iTime, numActiveParticles);
