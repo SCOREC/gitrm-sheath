@@ -77,29 +77,21 @@ Mesh initializeSheathMesh(int Nel_x,
         conn(iel,1) = conn(iel,0)+1;
         conn(iel,2) = conn(iel,1)+1+Nel_x;
         conn(iel,3) = conn(iel,2)-1;
+        elemFaceBdry(iel,0) = 0;
+        elemFaceBdry(iel,1) = 0;
+        elemFaceBdry(iel,2) = 0;
+        elemFaceBdry(iel,3) = 0;
         if (iel_x == 0){
-            elemFaceBdry(iel,0) = 0;
-            elemFaceBdry(iel,1) = 0;
-            elemFaceBdry(iel,2) = 0;
             elemFaceBdry(iel,3) = 1;
         }
         if (iel_x == Nel_x-1){
-            elemFaceBdry(iel,0) = 0;
             elemFaceBdry(iel,1) = 1;
-            elemFaceBdry(iel,2) = 0;
-            elemFaceBdry(iel,3) = 1;
         }
         if (iel_y == 0){
             elemFaceBdry(iel,0) = 1;
-            elemFaceBdry(iel,1) = 0;
-            elemFaceBdry(iel,2) = 0;
-            elemFaceBdry(iel,3) = 0;
         }
-        if (iel_y == 0){
-            elemFaceBdry(iel,0) = 0;
-            elemFaceBdry(iel,1) = 0;
+        if (iel_y == Nel_y-1){
             elemFaceBdry(iel,2) = 1;
-            elemFaceBdry(iel,3) = 0;
         }
 
     });
