@@ -177,25 +177,38 @@ void Particles::T2LTracking(Vector2View dx){
                                             nodes(conn(iel,3)));
             bool inDomain = true;
             bool trackError = false;
-            // int iel_x, iel_y;
+
             while (!located || trackError) {
-                // iel_y = iel / Nel_x;
-                // iel_x = iel - iel_y*Nel_x;
-                // if (iel_x == 0 && exitFace==west){
-                //     xnew = findIntersectionPoint(xp(ipart),
-                //                                 dx(ipart),
-                //                                 nodes(conn(iel,3)),
-                //                                 nodes(conn(iel,0)));
-                //     located = true;
-                //     inDomain = false;
-                //     break;
-                // }
-                
                 if (elemFaceBdry(iel,exitFace)){
                     located = true;
                     inDomain = false;
+                    if (exitFace==west){
+                        xnew = findIntersectionPoint(xp(ipart),
+                                                    dx(ipart),
+                                                    nodes(conn(iel,3)),
+                                                    nodes(conn(iel,0)));
+                    }
+                    if (exitFace==east){
+                        xnew = findIntersectionPoint(xp(ipart),
+                                                    dx(ipart),
+                                                    nodes(conn(iel,1)),
+                                                    nodes(conn(iel,2)));
+                    }
+                    if (exitFace==south){
+                        xnew = findIntersectionPoint(xp(ipart),
+                                                    dx(ipart),
+                                                    nodes(conn(iel,0)),
+                                                    nodes(conn(iel,1)));
+                    }
+                    if (exitFace==north){
+                        xnew = findIntersectionPoint(xp(ipart),
+                                                    dx(ipart),
+                                                    nodes(conn(iel,2)),
+                                                    nodes(conn(iel,3)));
+                    }
                     break;
                 }
+
                 switch (exitFace) {
                     case east:{
                         iel++;
