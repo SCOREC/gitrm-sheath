@@ -22,6 +22,7 @@ public:
     int computeTotalActiveParticles();
     void validateP2LAlgo();
     void T2LTracking(Vector2View dx);
+    void MacphersonTracking(Vector2View dx);
     Particles(){};
 
     Particles(int numParticles,

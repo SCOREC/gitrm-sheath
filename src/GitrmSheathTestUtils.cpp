@@ -152,6 +152,7 @@ void Particles::T2LTracking(Vector2View dx){
     auto meshObj = getMeshObj();
     auto nodes = meshObj.getNodesVector();
     auto conn = meshObj.getConnectivity();
+    auto elemFaceBdry = meshObj.getElemFaceBdry();
     int Nel_x = meshObj.getTotalXElements();
     int Nel_y = meshObj.getTotalYElements();
     int numParticles = getTotalParticles();
@@ -175,42 +176,47 @@ void Particles::T2LTracking(Vector2View dx){
                                         nodes(conn(iel,3)));
         bool inDomain = true;
         bool trackError = false;
-        int iel_x, iel_y;
+        // int iel_x, iel_y;
         while (!located || trackError) {
-            iel_y = iel / Nel_x;
-            iel_x = iel - iel_y*Nel_x;
-            if (iel_x == 0 && exitFace==west){
-                xnew = findIntersectionPoint(xp(ipart),
-                                            dx(ipart),
-                                            nodes(conn(iel,3)),
-                                            nodes(conn(iel,0)));
-                located = true;
-                inDomain = false;
-                break;
-            }
-            else if (iel_x == Nel_x-1 && exitFace==east){
-                xnew = findIntersectionPoint(xp(ipart),
-                                            dx(ipart),
-                                            nodes(conn(iel,1)),
-                                            nodes(conn(iel,2)));
-                located = true;
-                inDomain = false;
-                break;
-            }
-            else if (iel_y == 0 && exitFace==south){
-                xnew = findIntersectionPoint(xp(ipart),
-                                            dx(ipart),
-                                            nodes(conn(iel,0)),
-                                            nodes(conn(iel,1)));
-                located = true;
-                inDomain = false;
-                break;
-            }
-            else if (iel_y == Nel_y-1 && exitFace==north){
-                xnew = findIntersectionPoint(xp(ipart),
-                                            dx(ipart),
-                                            nodes(conn(iel,2)),
-                                            nodes(conn(iel,3)));
+            // iel_y = iel / Nel_x;
+            // iel_x = iel - iel_y*Nel_x;
+            // if (iel_x == 0 && exitFace==west){
+            //     xnew = findIntersectionPoint(xp(ipart),
+            //                                 dx(ipart),
+            //                                 nodes(conn(iel,3)),
+            //                                 nodes(conn(iel,0)));
+            //     located = true;
+            //     inDomain = false;
+            //     break;
+            // }
+            // else if (iel_x == Nel_x-1 && exitFace==east){
+            //     xnew = findIntersectionPoint(xp(ipart),
+            //                                 dx(ipart),
+            //                                 nodes(conn(iel,1)),
+            //                                 nodes(conn(iel,2)));
+            //     located = true;
+            //     inDomain = false;
+            //     break;
+            // }
+            // else if (iel_y == 0 && exitFace==south){
+            //     xnew = findIntersectionPoint(xp(ipart),
+            //                                 dx(ipart),
+            //                                 nodes(conn(iel,0)),
+            //                                 nodes(conn(iel,1)));
+            //     located = true;
+            //     inDomain = false;
+            //     break;
+            // }
+            // else if (iel_y == Nel_y-1 && exitFace==north){
+            //     xnew = findIntersectionPoint(xp(ipart),
+            //                                 dx(ipart),
+            //                                 nodes(conn(iel,2)),
+            //                                 nodes(conn(iel,3)));
+            //     located = true;
+            //     inDomain = false;
+            //     break;
+            // }
+            if (elemFaceBdry(iel,exitFace)){
                 located = true;
                 inDomain = false;
                 break;
@@ -294,5 +300,18 @@ void Particles::T2LTracking(Vector2View dx){
         }
     });
 }
+
+// void Particles::MacphersonTracking(Vector2View dx){
+//     auto meshObj = getMeshObj();
+//     auto nodes = meshObj.getNodesVector();
+//     auto conn = meshObj.getConnectivity();
+//     int Nel_x = meshObj.getTotalXElements();
+//     int Nel_y = meshObj.getTotalYElements();
+//     int numParticles = getTotalParticles();
+//     auto xp = getParticlePostions();
+//     auto eID = getParticleElementIDs();
+//     auto status = getParticleStatus();
+//
+// }
 
 }
