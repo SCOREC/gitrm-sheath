@@ -40,6 +40,7 @@ private:
     int Nel_y_;
     Vector2View nodes_;
     Int4View conn_;
+    Int4View elemFaceBdry_;
     int nnpTotal_;
     int nelTotal_;
 
@@ -53,12 +54,14 @@ public:
          int Nel_y,
          Vector2View nodes,
          Int4View conn,
+         Int4View elemFaceBdry,
          int nelTotal,
          int nnpTotal):
          Nel_x_(Nel_x),
          Nel_y_(Nel_y),
          nodes_(nodes),
          conn_(conn),
+         elemFaceBdry_(elemFaceBdry),
          nelTotal_(nelTotal),
          nnpTotal_(nnpTotal){};
 
@@ -68,6 +71,7 @@ public:
     int getTotalYElements();
     Vector2View getNodesVector();
     Int4View getConnectivity();
+    Int4View getElemFaceBdry();
     void computeFractionalElementArea();
     double getTotalArea();
     DoubleView getFractionalElementAreas();

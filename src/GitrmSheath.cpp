@@ -26,6 +26,10 @@ Int4View Mesh::getConnectivity(){
     return conn_;
 }
 
+Int4View Mesh::getElemFaceBdry(){
+    return elemFaceBdry_;
+}
+
 Mesh initializeSheathMesh(int Nel_x,
                           int Nel_y,
                           std::string coord_file){
@@ -64,16 +68,43 @@ Mesh initializeSheathMesh(int Nel_x,
 
     Kokkos::deep_copy(node, h_node);
 
-    Kokkos::View<int*[4]> conn("elem-connectivty",Nel);
+    Int4View conn("elem-connectivty",Nel);
+    Int4View elemFaceBdry("elem-face-boundary",Nel);
     Kokkos::parallel_for("init-elem-connectivty", Nel, KOKKOS_LAMBDA(const int iel){
         int iel_y = iel / Nel_x;
+        int iel_x = iel - iel_y*Nel_x;
         conn(iel,0) = iel + iel_y;
         conn(iel,1) = conn(iel,0)+1;
         conn(iel,2) = conn(iel,1)+1+Nel_x;
         conn(iel,3) = conn(iel,2)-1;
+        if (iel_x == 0){
+            elemFaceBdry(iel,0) = 0;
+            elemFaceBdry(iel,1) = 0;
+            elemFaceBdry(iel,2) = 0;
+            elemFaceBdry(iel,3) = 1;
+        }
+        if (iel_x == Nel_x-1){
+            elemFaceBdry(iel,0) = 0;
+            elemFaceBdry(iel,1) = 1;
+            elemFaceBdry(iel,2) = 0;
+            elemFaceBdry(iel,3) = 1;
+        }
+        if (iel_y == 0){
+            elemFaceBdry(iel,0) = 1;
+            elemFaceBdry(iel,1) = 0;
+            elemFaceBdry(iel,2) = 0;
+            elemFaceBdry(iel,3) = 0;
+        }
+        if (iel_y == 0){
+            elemFaceBdry(iel,0) = 0;
+            elemFaceBdry(iel,1) = 0;
+            elemFaceBdry(iel,2) = 1;
+            elemFaceBdry(iel,3) = 0;
+        }
+
     });
 
-    return Mesh(Nel_x,Nel_y,node,conn,Nel,Nnp);
+    return Mesh(Nel_x,Nel_y,node,conn,elemFaceBdry,Nel,Nnp);
 }
 
 void Mesh::computeFractionalElementArea(){

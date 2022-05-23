@@ -5,11 +5,11 @@
 namespace sheath{
 
 enum Dirxns {
-    none,
-    east,
-    west,
-    north,
     south,
+    east,
+    north,
+    west,
+    none,
 };
 
 using FaceDir = Dirxns;
