@@ -161,142 +161,144 @@ void Particles::T2LTracking(Vector2View dx){
     auto status = getParticleStatus();
 
     Kokkos::parallel_for("T2L-tracking",numParticles,KOKKOS_LAMBDA(const int ipart){
-        int iel = eID(ipart);
-        Vector2 xnew = xp(ipart)+dx(ipart);
-        bool located = P2LCheck(xnew,
-                                nodes(conn(iel,0)),
-                                nodes(conn(iel,1)),
-                                nodes(conn(iel,2)),
-                                nodes(conn(iel,3)));
-        FaceDir exitFace = T2LCheckAllFace(xp(ipart),
-                                        dx(ipart),
-                                        nodes(conn(iel,0)),
-                                        nodes(conn(iel,1)),
-                                        nodes(conn(iel,2)),
-                                        nodes(conn(iel,3)));
-        bool inDomain = true;
-        bool trackError = false;
-        // int iel_x, iel_y;
-        while (!located || trackError) {
-            // iel_y = iel / Nel_x;
-            // iel_x = iel - iel_y*Nel_x;
-            // if (iel_x == 0 && exitFace==west){
-            //     xnew = findIntersectionPoint(xp(ipart),
-            //                                 dx(ipart),
-            //                                 nodes(conn(iel,3)),
-            //                                 nodes(conn(iel,0)));
-            //     located = true;
-            //     inDomain = false;
-            //     break;
-            // }
-            // else if (iel_x == Nel_x-1 && exitFace==east){
-            //     xnew = findIntersectionPoint(xp(ipart),
-            //                                 dx(ipart),
-            //                                 nodes(conn(iel,1)),
-            //                                 nodes(conn(iel,2)));
-            //     located = true;
-            //     inDomain = false;
-            //     break;
-            // }
-            // else if (iel_y == 0 && exitFace==south){
-            //     xnew = findIntersectionPoint(xp(ipart),
-            //                                 dx(ipart),
-            //                                 nodes(conn(iel,0)),
-            //                                 nodes(conn(iel,1)));
-            //     located = true;
-            //     inDomain = false;
-            //     break;
-            // }
-            // else if (iel_y == Nel_y-1 && exitFace==north){
-            //     xnew = findIntersectionPoint(xp(ipart),
-            //                                 dx(ipart),
-            //                                 nodes(conn(iel,2)),
-            //                                 nodes(conn(iel,3)));
-            //     located = true;
-            //     inDomain = false;
-            //     break;
-            // }
-            if (elemFaceBdry(iel,exitFace)){
-                located = true;
-                inDomain = false;
-                break;
+        if (status(ipart)){
+            int iel = eID(ipart);
+            Vector2 xnew = xp(ipart)+dx(ipart);
+            bool located = P2LCheck(xnew,
+                                    nodes(conn(iel,0)),
+                                    nodes(conn(iel,1)),
+                                    nodes(conn(iel,2)),
+                                    nodes(conn(iel,3)));
+            FaceDir exitFace = T2LCheckAllFace(xp(ipart),
+                                            dx(ipart),
+                                            nodes(conn(iel,0)),
+                                            nodes(conn(iel,1)),
+                                            nodes(conn(iel,2)),
+                                            nodes(conn(iel,3)));
+            bool inDomain = true;
+            bool trackError = false;
+            // int iel_x, iel_y;
+            while (!located || trackError) {
+                // iel_y = iel / Nel_x;
+                // iel_x = iel - iel_y*Nel_x;
+                // if (iel_x == 0 && exitFace==west){
+                //     xnew = findIntersectionPoint(xp(ipart),
+                //                                 dx(ipart),
+                //                                 nodes(conn(iel,3)),
+                //                                 nodes(conn(iel,0)));
+                //     located = true;
+                //     inDomain = false;
+                //     break;
+                // }
+                // else if (iel_x == Nel_x-1 && exitFace==east){
+                //     xnew = findIntersectionPoint(xp(ipart),
+                //                                 dx(ipart),
+                //                                 nodes(conn(iel,1)),
+                //                                 nodes(conn(iel,2)));
+                //     located = true;
+                //     inDomain = false;
+                //     break;
+                // }
+                // else if (iel_y == 0 && exitFace==south){
+                //     xnew = findIntersectionPoint(xp(ipart),
+                //                                 dx(ipart),
+                //                                 nodes(conn(iel,0)),
+                //                                 nodes(conn(iel,1)));
+                //     located = true;
+                //     inDomain = false;
+                //     break;
+                // }
+                // else if (iel_y == Nel_y-1 && exitFace==north){
+                //     xnew = findIntersectionPoint(xp(ipart),
+                //                                 dx(ipart),
+                //                                 nodes(conn(iel,2)),
+                //                                 nodes(conn(iel,3)));
+                //     located = true;
+                //     inDomain = false;
+                //     break;
+                // }
+                if (elemFaceBdry(iel,exitFace)){
+                    located = true;
+                    inDomain = false;
+                    break;
+                }
+                switch (exitFace) {
+                    case east:{
+                        iel++;
+                        located = P2LCheck(xnew,
+                                            nodes(conn(iel,0)),
+                                            nodes(conn(iel,1)),
+                                            nodes(conn(iel,2)),
+                                            nodes(conn(iel,3)));
+                        exitFace = T2LCheckForWestEntry(xp(ipart),
+                                                    dx(ipart),
+                                                    nodes(conn(iel,0)),
+                                                    nodes(conn(iel,1)),
+                                                    nodes(conn(iel,2)),
+                                                    nodes(conn(iel,3)));
+                        break;
+                    }
+                    case west:{
+                        iel--;
+                        located = P2LCheck(xnew,
+                                            nodes(conn(iel,0)),
+                                            nodes(conn(iel,1)),
+                                            nodes(conn(iel,2)),
+                                            nodes(conn(iel,3)));
+                        exitFace = T2LCheckForEastEntry(xp(ipart),
+                                                    dx(ipart),
+                                                    nodes(conn(iel,0)),
+                                                    nodes(conn(iel,1)),
+                                                    nodes(conn(iel,2)),
+                                                    nodes(conn(iel,3)));
+                        break;
+                    }
+                    case north:{
+                        iel += Nel_x;
+                        located = P2LCheck(xnew,
+                                            nodes(conn(iel,0)),
+                                            nodes(conn(iel,1)),
+                                            nodes(conn(iel,2)),
+                                            nodes(conn(iel,3)));
+                        exitFace = T2LCheckForSouthEntry(xp(ipart),
+                                                    dx(ipart),
+                                                    nodes(conn(iel,0)),
+                                                    nodes(conn(iel,1)),
+                                                    nodes(conn(iel,2)),
+                                                    nodes(conn(iel,3)));
+                        break;
+                    }
+                    case south:{
+                        iel -= Nel_x;
+                        located = P2LCheck(xnew,
+                                            nodes(conn(iel,0)),
+                                            nodes(conn(iel,1)),
+                                            nodes(conn(iel,2)),
+                                            nodes(conn(iel,3)));
+                        exitFace = T2LCheckForNorthEntry(xp(ipart),
+                                                    dx(ipart),
+                                                    nodes(conn(iel,0)),
+                                                    nodes(conn(iel,1)),
+                                                    nodes(conn(iel,2)),
+                                                    nodes(conn(iel,3)));
+                        break;
+                    }
+                    case none:{
+                        printf("no faces crossed -- ERROR\n");
+                        trackError = true;
+                        break;
+                    }
+                }
             }
-            switch (exitFace) {
-                case east:{
-                    iel++;
-                    located = P2LCheck(xnew,
-                                        nodes(conn(iel,0)),
-                                        nodes(conn(iel,1)),
-                                        nodes(conn(iel,2)),
-                                        nodes(conn(iel,3)));
-                    exitFace = T2LCheckForWestEntry(xp(ipart),
-                                                dx(ipart),
-                                                nodes(conn(iel,0)),
-                                                nodes(conn(iel,1)),
-                                                nodes(conn(iel,2)),
-                                                nodes(conn(iel,3)));
-                    break;
-                }
-                case west:{
-                    iel--;
-                    located = P2LCheck(xnew,
-                                        nodes(conn(iel,0)),
-                                        nodes(conn(iel,1)),
-                                        nodes(conn(iel,2)),
-                                        nodes(conn(iel,3)));
-                    exitFace = T2LCheckForEastEntry(xp(ipart),
-                                                dx(ipart),
-                                                nodes(conn(iel,0)),
-                                                nodes(conn(iel,1)),
-                                                nodes(conn(iel,2)),
-                                                nodes(conn(iel,3)));
-                    break;
-                }
-                case north:{
-                    iel += Nel_x;
-                    located = P2LCheck(xnew,
-                                        nodes(conn(iel,0)),
-                                        nodes(conn(iel,1)),
-                                        nodes(conn(iel,2)),
-                                        nodes(conn(iel,3)));
-                    exitFace = T2LCheckForSouthEntry(xp(ipart),
-                                                dx(ipart),
-                                                nodes(conn(iel,0)),
-                                                nodes(conn(iel,1)),
-                                                nodes(conn(iel,2)),
-                                                nodes(conn(iel,3)));
-                    break;
-                }
-                case south:{
-                    iel -= Nel_x;
-                    located = P2LCheck(xnew,
-                                        nodes(conn(iel,0)),
-                                        nodes(conn(iel,1)),
-                                        nodes(conn(iel,2)),
-                                        nodes(conn(iel,3)));
-                    exitFace = T2LCheckForNorthEntry(xp(ipart),
-                                                dx(ipart),
-                                                nodes(conn(iel,0)),
-                                                nodes(conn(iel,1)),
-                                                nodes(conn(iel,2)),
-                                                nodes(conn(iel,3)));
-                    break;
-                }
-                case none:{
-                    printf("no faces crossed -- ERROR\n");
-                    trackError = true;
-                    break;
-                }
-            }
-        }
 
-        if (!located){
-            printf("Particle NOT FOUND\n");
-        }
-        else{
-            eID(ipart) = iel;
-            xp(ipart) = xnew;
-            status(ipart) = inDomain;
+            if (!located){
+                printf("Particle NOT FOUND\n");
+            }
+            else{
+                eID(ipart) = iel;
+                xp(ipart) = xnew;
+                status(ipart) = inDomain;
+            }
         }
     });
 }
