@@ -74,6 +74,52 @@ Particles initializeParticles(int numParticles, Mesh meshObj, unsigned int rngSe
     return partObj;
 }
 
+Particles initializeSingleParticle(Mesh meshObj, unsigned int rngSeed){
+
+    int Nel = meshObj.getTotalElements();
+    auto rand_pool = RandPool(rngSeed);
+
+    auto nodes = meshObj.getNodesVector();
+    auto conn = meshObj.getConnectivity();
+    Vector2View positions("particle-positions",1);
+    IntView elementIDs("particle-elementIDs",1);
+    BoolView status("particle-status",1);
+    Kokkos::parallel_for("intialize-particle-position", 1, KOKKOS_LAMBDA(const int ipart){
+        auto rgen = rand_pool.get_state();
+
+        double iel_rand = Kokkos::rand<RandGen, double>::draw(rgen, 0.0, 1.0);
+        int iel = iel_rand*Nel;
+
+        Vector2 v1 = nodes(conn(iel,0));
+        Vector2 v2 = nodes(conn(iel,1));
+        Vector2 v3 = nodes(conn(iel,2));
+        Vector2 v4 = nodes(conn(iel,3));
+
+
+        double lambda = Kokkos::rand<RandGen, double>::draw(rgen, 0.0, 1.0);
+        double mu = Kokkos::rand<RandGen, double>::draw(rgen, 0.0, 1.0);
+
+        double l1,l2,l3,l4;
+        l1 = (1.0-lambda)*(1.0-mu);
+        l2 = lambda*(1.0-mu);
+        l3 = lambda*mu;
+        l4 = (1.0-lambda)*mu;
+
+        Vector2 pos = v1*l1 + v2*l2 + v3*l3 + v4*l4;
+
+        positions(0) = pos;
+        elementIDs(0) = iel;
+        status(0) = true;
+
+        rand_pool.free_state(rgen);
+
+    });
+
+
+    Particles partObj(1,meshObj,positions,elementIDs,status);
+    return partObj;
+}
+
 Vector2View getRandDisplacements(int numParticles, int rngSeed, double scaleFactor){
     Vector2View disp("random-displacements",numParticles);
     auto rand_pool = RandPool(rngSeed);

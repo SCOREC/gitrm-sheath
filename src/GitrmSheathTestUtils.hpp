@@ -39,6 +39,7 @@ public:
 };
 
 Particles initializeParticles(int numParticles, Mesh meshObj, unsigned int rngSeed);
+Particles initializeSingleParticle(Mesh meshObj, unsigned int rngSeed);
 Vector2View getRandDisplacements(int numParticles, int rngSeed, double scaleFactor);
 
 }

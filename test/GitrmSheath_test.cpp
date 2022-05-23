@@ -21,7 +21,9 @@ int main( int argc, char* argv[] )
         double scale = atof(argv[6]);
 
         sheath::Mesh meshObj = sheath::initializeSheathMesh(Nel_x,Nel_y,nodeFile);
-        sheath::Particles partObj = sheath::initializeParticles(numParticles,meshObj,rngSeed);
+        // sheath::Particles partObj = sheath::initializeParticles(numParticles,meshObj,rngSeed);
+        // numParticles = partObj.getTotalParticles();
+        sheath::Particles partObj = sheath::initializeSingleParticle(meshObj,rngSeed);
         numParticles = partObj.getTotalParticles();
         sheath::Vector2View disp = sheath::getRandDisplacements(numParticles,rngSeed,scale);
 
@@ -67,7 +69,6 @@ void print_particle_state(sheath::Particles partObj, int iTime){
     auto xp = partObj.getParticlePostions();
     auto eID = partObj.getParticleElementIDs();
     auto status = partObj.getParticleStatus();
-    printf("numParticles = %d\n",numParticles );
 
     auto h_xp = Kokkos::create_mirror_view(xp);
     Kokkos::deep_copy(h_xp,xp);
