@@ -169,14 +169,14 @@ void getCoeffsForQuadBC(Vector2 xp, Vector2 v1,
     Vector2 b = v2-v1;
     Vector2 c = v4-v1;
     Vector2 d = v1-v2+v3-v4;
-    double x=0.5;
-    double y=0.5;
+    double x=0.1;
+    double y=0.1;
     double tol=1e-5;
     Vector2 f, Df1, Df2;
     double det, dx, dy, norm;
     norm = sqrt(x*x + y*y);
     int iter=0;
-    int iter_max = 50;
+    int iter_max = 20;
     while (norm>tol && iter<iter_max){
         f = a + b*x + c*y + d*x*y;
         Df1 = b + d*y;
@@ -186,7 +186,7 @@ void getCoeffsForQuadBC(Vector2 xp, Vector2 v1,
         dy = det*( Df1[1]*f[0] - Df1[0]*f[1]);
         x+=dx;
         y+=dy;
-        norm = sqrt(x*x + y*y);
+        norm = sqrt(dx*dx + dy*dy);
         iter++;
         if (norm>10.0)
             iter = iter_max;
@@ -195,7 +195,7 @@ void getCoeffsForQuadBC(Vector2 xp, Vector2 v1,
     if (iter < iter_max){
         *lambda = x;
         *mu = y;
-        printf("Newton-Raphson CONVERGED -- norm=%2.5e\n",norm);
+        // printf("Newton-Raphson CONVERGED -- norm=%2.5e  iter=%d\n",norm,iter);
     }
     else{
         printf("Newton-Raphson DID NOT CONVERGE -- norm=%2.5e\n",norm);

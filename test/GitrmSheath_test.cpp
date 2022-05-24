@@ -38,8 +38,8 @@ int main( int argc, char* argv[] )
             partObj.T2LTracking(disp);
             // partObj.T2LTrackingDebug(disp);
             numActiveParticles = partObj.computeTotalActiveParticles();
-            // partObj.interpolateQuadEField();
-            partObj.interpolateTriEField();
+            partObj.interpolateQuadEField();
+            // partObj.interpolateTriEField();
             // print_particle_state(partObj,iTime);
             printf("Total particles at T=%d is %d\n",iTime, numActiveParticles);
         }
