@@ -32,17 +32,19 @@ int main( int argc, char* argv[] )
         int numActiveParticles = partObj.computeTotalActiveParticles();
         int iTime = 0;
         printf("Total particles at T=%d is %d\n",iTime, numActiveParticles );
-        print_particle_state(partObj,iTime);
+        // print_particle_state(partObj,iTime);
+        Kokkos::Profiling::pushRegion("push_test_0");
         while(numActiveParticles > 0 && iTime<10){
             iTime++;
             partObj.T2LTracking(disp);
             // partObj.T2LTrackingDebug(disp);
             numActiveParticles = partObj.computeTotalActiveParticles();
-            partObj.interpolateQuadEField();
-            // partObj.interpolateTriEField();
+            // partObj.interpolateQuadEField();
+            partObj.interpolateTriEField();
             // print_particle_state(partObj,iTime);
             printf("Total particles at T=%d is %d\n",iTime, numActiveParticles);
         }
+        Kokkos::Profiling::popRegion();
         // partObj.MacphersonTracking(disp);
     }
     Kokkos::finalize();
