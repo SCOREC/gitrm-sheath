@@ -84,7 +84,7 @@ Particles initializeSingleParticle(Mesh meshObj, unsigned int rngSeed){
     Vector2View positions("particle-positions",1);
     IntView elementIDs("particle-elementIDs",1);
     BoolView status("particle-status",1);
-    Kokkos::parallel_for("intialize-particle-position", 1, KOKKOS_LAMBDA(const int ipart){
+    Kokkos::parallel_for("intialize-particle-position", 1, KOKKOS_LAMBDA(const int){
         auto rgen = rand_pool.get_state();
 
         double iel_rand = Kokkos::rand<RandGen, double>::draw(rgen, 0.0, 1.0);
@@ -540,5 +540,80 @@ void Particles::MacphersonTracking(Vector2View dx){
     });
 
 }
+
+void Particles::interpolateQuadEField(){
+    auto meshObj = getMeshObj();
+    auto nodes = meshObj.getNodesVector();
+    auto conn = meshObj.getConnectivity();
+    auto Efield = meshObj.getEfieldVector();
+    auto elemFaceBdry = meshObj.getElemFaceBdry();
+    int Nel_x = meshObj.getTotalXElements();
+    int Nel_y = meshObj.getTotalYElements();
+    int numParticles = getTotalParticles();
+    auto xp = getParticlePostions();
+    auto eID = getParticleElementIDs();
+    auto status = getParticleStatus();
+
+    Kokkos::parallel_for("Efield-2-particles",numParticles,KOKKOS_LAMBDA(const int ipart){
+        if (status(ipart)){
+            int iel = eID(ipart);
+            double lambda, mu;
+            getCoeffsForQuadBC(xp(ipart),
+                            nodes(conn(iel,0)),
+                            nodes(conn(iel,1)),
+                            nodes(conn(iel,2)),
+                            nodes(conn(iel,3)),
+                            &lambda,
+                            &mu);
+            Vector2 Ep = Efield(conn(iel,0))*(1.0-lambda)*(1.0-mu) +
+                         Efield(conn(iel,1))*lambda*(1.0-mu) +
+                         Efield(conn(iel,2))*lambda*mu +
+                         Efield(conn(iel,3))*(1.0-lambda)*mu;
+        }
+    });
+
+}
+
+void Particles::interpolateTriEField(){
+    auto meshObj = getMeshObj();
+    auto nodes = meshObj.getNodesVector();
+    auto conn = meshObj.getConnectivity();
+    auto Efield = meshObj.getEfieldVector();
+    auto elemFaceBdry = meshObj.getElemFaceBdry();
+    int Nel_x = meshObj.getTotalXElements();
+    int Nel_y = meshObj.getTotalYElements();
+    int numParticles = getTotalParticles();
+    auto xp = getParticlePostions();
+    auto eID = getParticleElementIDs();
+    auto status = getParticleStatus();
+
+    Kokkos::parallel_for("Efield-2-particles",numParticles,KOKKOS_LAMBDA(const int ipart){
+        if (status(ipart)){
+            int iel = eID(ipart);
+            double lambda0, lambda1, lambda2, lambda3;
+            getTriangleBC(xp(ipart),
+                            nodes(conn(iel,0)),
+                            nodes(conn(iel,1)),
+                            nodes(conn(iel,2)),
+                            nodes(conn(iel,3)),
+                            &lambda0, &lambda1,
+                            &lambda2, &lambda3);
+            Vector2 Ep = Efield(conn(iel,0))*lambda0 +
+                         Efield(conn(iel,1))*lambda1 +
+                         Efield(conn(iel,2))*lambda2 +
+                         Efield(conn(iel,3))*lambda3;
+
+            // Vector2 xp_computed = nodes(conn(iel,0))*lambda0 +
+            //              nodes(conn(iel,1))*lambda1 +
+            //              nodes(conn(iel,2))*lambda2 +
+            //              nodes(conn(iel,3))*lambda3;
+            //
+            // Vector2 diff = xp_computed-xp(ipart);
+            // printf("%2.5e %2.5e\n",diff[0],diff[1]);
+            xp(ipart) += Ep*0.0;
+        }
+    });
+}
+
 
 }

@@ -22,6 +22,10 @@ Vector2View Mesh::getNodesVector(){
     return nodes_;
 }
 
+Vector2View Mesh::getEfieldVector(){
+    return Efield_;
+}
+
 Int4View Mesh::getConnectivity(){
     return conn_;
 }
@@ -32,7 +36,8 @@ Int4View Mesh::getElemFaceBdry(){
 
 Mesh initializeSheathMesh(int Nel_x,
                           int Nel_y,
-                          std::string coord_file){
+                          std::string coord_file,
+                          std::string Efield_file){
 
     int Nel = Nel_x * Nel_y;
     int Nnp = (Nel_x+1) * (Nel_y+1);
@@ -62,11 +67,37 @@ Mesh initializeSheathMesh(int Nel_x,
     coordFile.close();
 
     if (inp < Nnp){
-        std::cout << "ERROR: Insufficient nodes in input file -- re-check inputs\n";
+        std::cout << "ERROR: Insufficient nodes in node input file -- re-check inputs\n";
         exit(0);
     }
 
     Kokkos::deep_copy(node, h_node);
+
+
+    Vector2View Efield("Efield-vector",Nnp);
+
+    Vector2View::HostMirror h_Efield = Kokkos::create_mirror_view(Efield);
+    std::ifstream EfieldFile(Efield_file);
+
+    double Ex, Ey;
+    inp = 0;
+    if (EfieldFile.is_open()){
+        while (EfieldFile >> Ex >> Ey){
+            if (inp >= Nnp){
+                std::cout << "ERROR: Too many nodes in Efield input file -- re-check inputs\n";
+                exit(0);
+            }
+            h_Efield(inp) = Vector2(Ex,Ey);
+            inp++;
+        }
+    }
+    else{
+        std::cout << "ERROR: Efield file " << Efield_file << " INVALID\n";
+        exit(0);
+    }
+    EfieldFile.close();
+
+    Kokkos::deep_copy(Efield, h_Efield);
 
     Int4View conn("elem-connectivty",Nel);
     Int4View elemFaceBdry("elem-face-boundary",Nel);
@@ -96,7 +127,7 @@ Mesh initializeSheathMesh(int Nel_x,
 
     });
 
-    return Mesh(Nel_x,Nel_y,node,conn,elemFaceBdry,Nel,Nnp);
+    return Mesh(Nel_x,Nel_y,node,conn,elemFaceBdry,Nel,Nnp,Efield);
 }
 
 void Mesh::computeFractionalElementArea(){
@@ -114,6 +145,12 @@ void Mesh::computeFractionalElementArea(){
     Vector2 p2 = nodes(conn(iel,1));
     Vector2 p3 = nodes(conn(iel,2));
     Vector2 p4 = nodes(conn(iel,3));
+
+    // printf("(%2.5e %2.5e) (%2.5e %2.5e) (%2.5e %2.5e) (%2.5e %2.5e)\n",
+    //                         nodes(conn(iel,0))[0],nodes(conn(iel,0))[1],
+    //                         nodes(conn(iel,1))[0],nodes(conn(iel,1))[1],
+    //                         nodes(conn(iel,2))[0],nodes(conn(iel,2))[1],
+    //                         nodes(conn(iel,3))[0],nodes(conn(iel,3))[1]);
 
     Vector2 e1 = p2-p1;
     Vector2 e2 = p4-p1;

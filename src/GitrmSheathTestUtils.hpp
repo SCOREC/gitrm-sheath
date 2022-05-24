@@ -24,6 +24,8 @@ public:
     void T2LTracking(Vector2View dx);
     void T2LTrackingDebug(Vector2View dx);
     void MacphersonTracking(Vector2View dx);
+    void interpolateQuadEField();
+    void interpolateTriEField();
     Particles(){};
 
     Particles(int numParticles,

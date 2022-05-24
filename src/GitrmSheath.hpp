@@ -47,6 +47,8 @@ private:
     double totArea_;
     DoubleView fracArea_;
 
+    Vector2View Efield_;
+
 public:
     Mesh(){};
 
@@ -56,20 +58,23 @@ public:
          Int4View conn,
          Int4View elemFaceBdry,
          int nelTotal,
-         int nnpTotal):
+         int nnpTotal,
+         Vector2View Efield):
          Nel_x_(Nel_x),
          Nel_y_(Nel_y),
          nodes_(nodes),
          conn_(conn),
          elemFaceBdry_(elemFaceBdry),
          nelTotal_(nelTotal),
-         nnpTotal_(nnpTotal){};
+         nnpTotal_(nnpTotal),
+         Efield_(Efield){};
 
     int getTotalNodes();
     int getTotalElements();
     int getTotalXElements();
     int getTotalYElements();
     Vector2View getNodesVector();
+    Vector2View getEfieldVector();
     Int4View getConnectivity();
     Int4View getElemFaceBdry();
     void computeFractionalElementArea();
@@ -80,7 +85,8 @@ public:
 
 Mesh initializeSheathMesh(int Nel_x,
                           int Nel_y,
-                          std::string coord_file);
+                          std::string coord_file,
+                          std::string Efield_file);
 
 KOKKOS_INLINE_FUNCTION
 bool P2LCheck(Vector2 xp, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
@@ -153,6 +159,82 @@ double findIntersectionLambda(Vector2 xp, Vector2 dx, Vector2 v1, Vector2 v2){
     Vector2 fCenter = (v1+v2)*0.5;
     Vector2 fNormal = (v2-v1).rotateCW90();
     return ((fCenter-xp).dot(fNormal))/(dx.dot(fNormal));
+}
+
+KOKKOS_INLINE_FUNCTION
+void getCoeffsForQuadBC(Vector2 xp, Vector2 v1,
+                        Vector2 v2, Vector2 v3,
+                        Vector2 v4, double* lambda, double* mu){
+    Vector2 a = v1-xp;
+    Vector2 b = v2-v1;
+    Vector2 c = v4-v1;
+    Vector2 d = v1-v2+v3-v4;
+    double x=0.5;
+    double y=0.5;
+    double tol=1e-5;
+    Vector2 f, Df1, Df2;
+    double det, dx, dy, norm;
+    norm = sqrt(x*x + y*y);
+    int iter=0;
+    int iter_max = 50;
+    while (norm>tol && iter<iter_max){
+        f = a + b*x + c*y + d*x*y;
+        Df1 = b + d*y;
+        Df2 = c + d*x;
+        det = 1.0/(Df1[0]*Df2[1]-Df1[1]*Df2[0]);
+        dx = det*(-Df2[1]*f[0] + Df2[0]*f[1]);
+        dy = det*( Df1[1]*f[0] - Df1[0]*f[1]);
+        x+=dx;
+        y+=dy;
+        norm = sqrt(x*x + y*y);
+        iter++;
+        if (norm>10.0)
+            iter = iter_max;
+    }
+
+    if (iter < iter_max){
+        *lambda = x;
+        *mu = y;
+        printf("Newton-Raphson CONVERGED -- norm=%2.5e\n",norm);
+    }
+    else{
+        printf("Newton-Raphson DID NOT CONVERGE -- norm=%2.5e\n",norm);
+    }
+}
+
+KOKKOS_INLINE_FUNCTION
+void getTriangleBC(Vector2 xp, Vector2 v1,
+                    Vector2 v2, Vector2 v3,
+                    Vector2 v4, double* lambda0,
+                    double* lambda1, double* lambda2,
+                    double* lambda3){
+    Vector2 e1 = v2-v1;
+    Vector2 e2 = v3-v2;
+    Vector2 e3 = v4-v3;
+    Vector2 e4 = v1-v4;
+    Vector2 e5 = v4-v2;
+    Vector2 p1 = xp-v1;
+    Vector2 p2 = xp-v2;
+    Vector2 p3 = xp-v3;
+    Vector2 p4 = xp-v4;
+    double triArea;
+    if (e5.cross(xp-v2) < 0.0){
+        // Upper-Tri
+        triArea = e3.cross(e2);
+        *lambda0 = 0.0;
+        *lambda1 = fabs(e3.cross(p3)/triArea);
+        *lambda2 = fabs(p2.cross(e5)/triArea);
+        *lambda3 = 1.0-(*lambda2)-(*lambda1);
+    }
+    else{
+        // Lower-Tri
+        triArea = e1.cross(-e4);
+        *lambda0 = fabs(e5.cross(p2)/triArea);
+        *lambda1 = fabs(e4.cross(p4)/triArea);
+        *lambda2 = 0.0;
+        *lambda3 = 1.0-(*lambda0)-(*lambda1);
+    }
+
 }
 
 KOKKOS_INLINE_FUNCTION
