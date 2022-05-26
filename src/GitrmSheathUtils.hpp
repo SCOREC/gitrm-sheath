@@ -211,7 +211,7 @@ double Vector2::magnitude() {
  */
 KOKKOS_INLINE_FUNCTION
 Vector2 Vector2::rotateCW90() {
-    return Vector2(-components_[1],components_[0]);
+    return Vector2(components_[1],-components_[0]);
 }
 
 /**
