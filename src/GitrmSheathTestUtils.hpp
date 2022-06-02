@@ -21,6 +21,7 @@ public:
     BoolView getParticleStatus();
     int computeTotalActiveParticles();
     void validateP2LAlgo();
+    void validateP2LAlgoAlt();
     void T2LTracking(Vector2View dx);
     void T2LTrackingDebug(Vector2View dx);
     void MacphersonTracking(Vector2View dx);

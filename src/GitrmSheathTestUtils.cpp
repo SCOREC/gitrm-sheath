@@ -60,6 +60,10 @@ Particles initializeParticles(int numParticles, Mesh meshObj, unsigned int rngSe
 
             Vector2 pos = v1*l1 + v2*l2 + v3*l3 + v4*l4;
 
+            bool located = P2LCheck(pos,v1,v2,v3,v4);
+            if (!located){
+                printf("Element ID =%d possibly non-convex -- not passing P2L check for initiated particle\n",iel );
+            }
             positions(ipart+ipartOffset) = pos;
             elementIDs(ipart+ipartOffset) = iel;
             status(ipart+ipartOffset) = true;
@@ -188,7 +192,62 @@ void Particles::validateP2LAlgo(){
         }
 
         if (iel-1 != eID(ipart)){
-            printf("Particle NOT LOCATED\n");
+            printf("Particle %d NOT LOCATED with P2L\n",ipart);
+        }
+
+    });
+}
+
+void Particles::validateP2LAlgoAlt(){
+    auto meshObj = getMeshObj();
+    auto nodes = meshObj.getNodesVector();
+    auto conn = meshObj.getConnectivity();
+    int Nel = meshObj.getTotalElements();
+    int Nel_x = meshObj.getTotalXElements();
+    int Nel_y = meshObj.getTotalYElements();
+    int numParticles = getTotalParticles();
+    auto xp = getParticlePostions();
+    auto eID = getParticleElementIDs();
+    Kokkos::parallel_for("locate-particles",numParticles,KOKKOS_LAMBDA(const int ipart){
+        int iel_x = 0;
+        bool located_in_stack = false;
+        while (!located_in_stack && iel_x<Nel_x){
+            auto node1 = nodes(conn(iel_x,0));
+            auto node2 = nodes(conn(iel_x,1));
+            int skip = (Nel_y-1)*Nel_x;
+            auto node3 = nodes(conn(iel_x+skip,2));
+            auto node4 = nodes(conn(iel_x+skip,3));
+            located_in_stack = P2LCheck(xp(ipart),
+                                        node1,
+                                        node2,
+                                        node3,
+                                        node4);
+            iel_x++;
+        }
+
+        if (located_in_stack){
+            iel_x--;
+            int iel_y=0;
+            int iel;
+            bool located = false;
+            while(!located && iel_y<Nel_y){
+                iel = iel_x + (iel_y)*Nel_x;
+                located = P2LCheck(xp(ipart),
+                                    nodes(conn(iel,0)),
+                                    nodes(conn(iel,1)),
+                                    nodes(conn(iel,2)),
+                                    nodes(conn(iel,3)));
+                iel_y++;
+            }
+
+            if (located && (iel != eID(ipart))){
+                printf("Particle %d NOT LOCATED iel=%d eID=%d\n",ipart,iel,eID(ipart));
+            }
+            // else
+                // printf("verified\n");
+        }
+        else{
+            printf("Particle %d NOT IN DOMAIN\n",ipart);
         }
 
     });

@@ -29,6 +29,7 @@ int main( int argc, char* argv[] )
         sheath::Vector2View disp = sheath::getRandDisplacements(numParticles,rngSeed,scale);
 
         // partObj.validateP2LAlgo();
+        partObj.validateP2LAlgoAlt();
         int numActiveParticles = partObj.computeTotalActiveParticles();
         int iTime = 0;
         printf("Total particles at T=%d is %d\n",iTime, numActiveParticles );
