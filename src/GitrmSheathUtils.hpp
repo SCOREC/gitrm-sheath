@@ -67,6 +67,9 @@ public:
     double magnitude();
 
     KOKKOS_FUNCTION
+    double magnitudesq();
+
+    KOKKOS_FUNCTION
     Vector2 rotateCW90();
 };
 
@@ -202,6 +205,11 @@ KOKKOS_INLINE_FUNCTION
 double Vector2::magnitude() {
     return sqrt(components_[0]*components_[0] +
                 components_[1]*components_[1] );
+}
+
+KOKKOS_INLINE_FUNCTION
+double Vector2::magnitudesq(){
+    return components_[0]*components_[0]+components_[1]*components_[1];
 }
 
 /**

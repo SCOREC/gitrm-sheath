@@ -203,6 +203,64 @@ void getCoeffsForQuadBC(Vector2 xp, Vector2 v1,
 }
 
 KOKKOS_INLINE_FUNCTION
+void getWachpressCoeffs(Vector2 xp, Vector2 v1,
+		        Vector2 v2, Vector2 v3,
+		        Vector2 v4, double* l1, 
+			double* l2, double* l3,
+			double* l4){
+
+   Vector2 e1 = v2-v1;
+   Vector2 e2 = v3-v2;
+   Vector2 e3 = v4-v3;
+   Vector2 e4 = v1-v4;
+   Vector2 p1 = xp-v1;
+   Vector2 p2 = xp-v2;
+   Vector2 p3 = xp-v3;
+   Vector2 p4 = xp-v4;
+   double p1mag = p1.magnitudesq();
+   double p2mag = p2.magnitudesq();
+   double p3mag = p3.magnitudesq();
+   double p4mag = p4.magnitudesq();
+   double wsum = 0.0;
+
+   // cot of angle b/w v2-v1-xp
+   double d = e1.dot(p1)/e1.cross(p1);
+   // cot of angle b/w xp-v1-v4
+   double g = p1.dot(e4)/p1.cross(e4);
+   double w1 = (d+g)/p1mag;
+   wsum += w1;
+   
+   // cot of angle b/w v3-v2-xp
+   d = e2.dot(p2)/e2.cross(p2);
+   // cot of angle b/w xp-v2-v1
+   g = p2.dot(e1)/p2.cross(e1);
+   double w2 = (d+g)/p2mag;
+   wsum += w2;
+   
+   // cot of angle b/w v4-v3-xp
+   d = e3.dot(p3)/e3.cross(p3);
+   // cot of angle b/w xp-v3-v2
+   g = p3.dot(e2)/p3.cross(e2);
+   double w3 = (d+g)/p3mag;
+   wsum += w3;
+   
+   // cot of angle b/w v1-v4-xp
+   d = e4.dot(p4)/e4.cross(p4);
+   // cot of angle b/w xp-v4-v3
+   g = p4.dot(e3)/p4.cross(e3);
+   double w4 = (d+g)/p4mag;
+   wsum += w4;
+   
+
+   *l1 = w1/wsum;
+   *l2 = w2/wsum;
+   *l3 = w3/wsum;
+   *l4 = w4/wsum;
+
+
+}
+
+KOKKOS_INLINE_FUNCTION
 void getTriangleBC(Vector2 xp, Vector2 v1,
                     Vector2 v2, Vector2 v3,
                     Vector2 v4, double* lambda0,
