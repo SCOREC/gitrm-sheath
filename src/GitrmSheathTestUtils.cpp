@@ -586,4 +586,44 @@ void Particles::interpolateTriEField(){
 }
 
 
+void Particles::interpolateWachpress(){
+
+auto meshObj = getMeshObj();
+auto nodes = meshObj.getNodesVector();
+auto conn = meshObj.getConnectivity();
+auto Efield = meshObj.getEfieldVector();
+auto elemFaceBdry = meshObj.getElemFaceBdry();
+int Nel_x = meshObj.getTotalXElements();
+int Nel_y = meshObj.getTotalYElements();
+int numParticles = getTotalParticles();
+auto xp = getParticlePostions();
+auto eID = getParticleElementIDs();
+auto status = getParticleStatus();
+
+Kokkos::parallel_for("Efield-2-particles",numParticles,KOKKOS_LAMBDA(const int ipart){
+if (status(ipart)){
+int iel = eID(ipart);
+double w1,w2,w3,w4;
+auto v1 = nodes(conn(iel,0));
+auto v2 = nodes(conn(iel,1));
+auto v3 = nodes(conn(iel,2));
+auto v4 = nodes(conn(iel,3));
+
+printf("input particle coordinate:\n (%1.3e,%1.3e)\n",xp(ipart)[0],xp(ipart)[1]);
+
+getWachpressCoeffs(xp(ipart),v1,v2,v3,v4,&w1,&w2,&w3,&w4);
+
+auto wp_coord = v1*w1+v2*w2+v3*w3+v4*w4;
+
+printf("coordinate from Wachspress interpolation:\n (%1.3e,%1.3e)\n",wp_coord[0],wp_coord[1]);
+														
+//auto diff = xp(ipart)-(v1*w1+v2*w2+v3*w3+v4*w4);
+
+//printf("%1.3e,%1.3e\n",diff[0],diff[1]);
+
+}
+														       });
+
+}
+
 }

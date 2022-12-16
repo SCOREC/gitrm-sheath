@@ -88,6 +88,8 @@ Mesh initializeSheathMesh(int Nel_x,
                           std::string coord_file,
                           std::string Efield_file);
 
+Mesh initializeSimpleMesh();
+
 KOKKOS_INLINE_FUNCTION
 bool P2LCheck(Vector2 xp, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
     Vector2 e1 = v2-v1;

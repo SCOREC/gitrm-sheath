@@ -34,6 +34,43 @@ Int4View Mesh::getElemFaceBdry(){
     return elemFaceBdry_;
 }
 
+Mesh initializeSimpleMesh(){
+   int Nel = 1;
+   int Nnp = 4;
+
+   Vector2View node("node-coord-vector",Nnp);
+   Vector2View::HostMirror h_node = Kokkos::create_mirror_view(node);
+
+   h_node(0) = Vector2(0.63,-0.1);
+   h_node(1) = Vector2(20.3,0.2);
+   h_node(2) = Vector2(23.7,3.12);
+   h_node(3) = Vector2(-2.1,2.04);
+
+   Kokkos::deep_copy(node, h_node);
+   
+   Vector2View Efield("Efield-vector",Nnp); 
+   //Vector2View::HostMirror h_Efield = Kokkos::create_mirror_view(Efield);
+
+   //h_Efield(0) = Vector2(10.0,-10.0);
+   //h_Efield(1) = Vector2(20.0,-20.0);
+   //h_Efield(2) = Vector2(15.0,-15.0);
+   //h_Efield(3) = Vector2(0.0,-0.0);
+
+   //Kokkos::deep_copy(Efield, h_Efield);
+
+   Int4View conn("elem-connectivty",Nel);
+   Int4View elemFaceBdry("elem-face-boundary",Nel);
+
+   Int4View::HostMirror h_conn = Kokkos::create_mirror_view(conn);
+   h_conn(0,0) = 0;
+   h_conn(0,1) = 1;
+   h_conn(0,2) = 2;
+   h_conn(0,3) = 3;
+   Kokkos::deep_copy(conn, h_conn);
+
+   return Mesh(1,1,node,conn,elemFaceBdry,Nel,Nnp,Efield);
+}
+
 Mesh initializeSheathMesh(int Nel_x,
                           int Nel_y,
                           std::string coord_file,
