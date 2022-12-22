@@ -128,14 +128,41 @@ To rebuild the code after making some changes:
 ```
 
 
-### Building for CPU execution
+### Building for CPU execution using OpenMP
+
+Create a file named `doConfigGitrmSheathOmp.sh` with the following contents:
 
 ```
 bdir=$PWD/build-omp
 cmake -S gitrm-sheath -B $bdir \
 -DKokkos_DIR=$PWD/buildKokkosOPENMP/install/lib64/cmake/Kokkos \
 -DCMAKE_INSTALL_PREFIX=$bdir/install
+```
+
+Create a file named `buildGitrmSheathOmp.sh` with the following contents:
+
+```
+bdir=$PWD/build-omp
 cmake --build $bdir --target install
+```
+
+Make them executable:
+
+```
+chmod +x doConfigGitrmSheathOmp.sh buildGitrmSheathOmp.sh
+```
+
+Run the configure script then run the build script:
+
+```
+./doConfigGitrmSheathOmp.sh
+./buildGitrmSheathOmp.sh
+```
+
+To rebuild the code after making some changes:
+
+```
+./buildGitrmSheathOmp.sh
 ```
 
 ## Run test
