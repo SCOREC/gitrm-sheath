@@ -41,6 +41,12 @@ cuda/11.4
 
 ### Install Kokkos
 
+Clone the repo
+
+```
+git clone https://github.com/Kokkos/kokkos.git
+```
+
 Create a file named `installKokkos.sh` with the following contents:
 
 ```
