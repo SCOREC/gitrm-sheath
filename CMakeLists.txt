@@ -17,8 +17,9 @@ macro(gitrmsheath_export_lib target headers)
   install(FILES ${headers} DESTINATION include)
 endmacro(gitrmsheath_export_lib)
 
-
-find_package(Kokkos)
+#kokkos does not allow extensions
+set(CMAKE_CXX_EXTENSIONS Off)
+find_package(Kokkos REQUIRED)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)

@@ -39,27 +39,116 @@ cmake/3.20.0  \
 cuda/11.4
 ```
 
-Building with GPU
-```
-mkdir build-GPU
-cd build-GPU
-export CMAKE_PREFIX_PATH=$kk/lib64/cmake/Kokkos:$CMAKE_PREFIX_PATH
-cmake ../gitrm-sheath -DCMAKE_CXX_COMPILER=$kk_compiler -DCMAKE_INSTALL_PREFIX=$PWD/install # on GPU
-make -j 8
-make install
-```
+### Install Kokkos
 
-Building with OpenMP
-```
-mkdir build-omp
-cd build-omp
-export CMAKE_PREFIX_PATH=$kk/lib64/cmake/Kokkos:$CMAKE_PREFIX_PATH
-cmake ../gitrm-sheath -DCMAKE_INSTALL_PREFIX=$PWD/install # on OpenMP
-make -j 8
-make install
-```
-## test
+Clone the repo
 
 ```
-./install/bin/GitrmSheath_Demo
+git clone https://github.com/Kokkos/kokkos.git
 ```
+
+Create a file named `installKokkos.sh` with the following contents:
+
+```
+bkend=$1
+d=buildKokkos${bkend}
+omp=""
+cuda=""
+[[ ${bkend} == "OPENMP" ]] && omp="-DKokkos_ENABLE_OPENMP=on"
+[[ ${bkend} == "CUDA" ]] && cuda="-DKokkos_ENABLE_CUDA=on -DKokkos_ENABLE_CUDA_LAMBDA=on"
+[[ ${bkend} == "OPENMP_CUDA" ]] && ompcuda="-DKokkos_ENABLE_OPENMP=on -DKokkos_ENABLE_CUDA=on -DKokkos_ENABLE_CUDA_LAMBDA=on"
+cmake -S kokkos -B $d \
+  -DCMAKE_CXX_COMPILER=g++ \
+  -DKokkos_ARCH_TURING75=ON \
+  -DBUILD_SHARED_LIBS=ON \
+  $omp \
+  $cuda \
+  $ompcuda \
+  -DKokkos_ENABLE_SERIAL=ON \
+  -DKokkos_ENABLE_DEBUG=on \
+  -DKokkos_ENABLE_TESTS=off \
+  -DCMAKE_INSTALL_PREFIX=$d/install
+cmake --build $d -j 8 --target install
+```
+
+Make it executable:
+
+```
+chmod +x installKokkos.sh
+```
+
+Install with CUDA backend
+
+```
+./installKokkos.sh CUDA
+```
+
+Install with OpenMP backend
+
+```
+./installKokkos.sh OPENMP
+```
+
+### Building for GPU execution
+
+Create a file named `doConfigGitrmSheathGpu.sh` with the following contents:
+
+```
+bdir=$PWD/build-GPU
+cmake -S gitrm-sheath -B $bdir \
+-DKokkos_DIR=$PWD/buildKokkosCUDA/install/lib64/cmake/Kokkos \
+-DCMAKE_CXX_COMPILER=$PWD/buildKokkosCUDA/install/bin/nvcc_wrapper \
+-DCMAKE_INSTALL_PREFIX=$bdir/install
+```
+
+Create a file named `buildGitrmSheathGpu.sh` with the following contents:
+
+```
+bdir=$PWD/build-GPU
+cmake --build $bdir --target install
+```
+
+Make them executable:
+
+```
+chmod +x doConfigGitrmSheathGpu.sh buildGitrmSheathGpu.sh
+```
+
+Run the configure script then run the build script:
+
+```
+./doConfigGitrmSheathGpu.sh
+./buildGitrmSheathGpu.sh
+```
+
+To rebuild the code after making some changes:
+
+```
+./buildGitrmSheathGpu.sh
+```
+
+
+### Building for CPU execution
+
+```
+bdir=$PWD/build-omp
+cmake -S gitrm-sheath -B $bdir \
+-DKokkos_DIR=$PWD/buildKokkosOPENMP/install/lib64/cmake/Kokkos \
+-DCMAKE_INSTALL_PREFIX=$bdir/install
+cmake --build $bdir --target install
+```
+
+## Run test
+
+Run with OpenMP on CPU
+
+```
+./build-omp/test/GitrmSheathWachspress_Demo
+```
+
+Run with CUDA on GPU
+
+```
+./build-GPU/test/GitrmSheathWachspress_Demo
+```
+
