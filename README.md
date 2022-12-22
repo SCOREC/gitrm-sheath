@@ -143,12 +143,12 @@ cmake --build $bdir --target install
 Run with OpenMP on CPU
 
 ```
-./build-omp/install/bin/GitrmSheath_Demo
+./build-omp/test/GitrmSheathWachspress_Demo
 ```
 
 Run with CUDA on GPU
 
 ```
-./build-GPU/install/bin/GitrmSheath_Demo
+./build-GPU/test/GitrmSheathWachspress_Demo
 ```
 
