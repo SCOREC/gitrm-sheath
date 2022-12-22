@@ -91,14 +91,42 @@ Install with OpenMP backend
 
 ### Building for GPU execution
 
+Create a file named `doConfigGitrmSheathGpu.sh` with the following contents:
+
 ```
 bdir=$PWD/build-GPU
 cmake -S gitrm-sheath -B $bdir \
 -DKokkos_DIR=$PWD/buildKokkosCUDA/install/lib64/cmake/Kokkos \
 -DCMAKE_CXX_COMPILER=$PWD/buildKokkosCUDA/install/bin/nvcc_wrapper \
 -DCMAKE_INSTALL_PREFIX=$bdir/install
+```
+
+Create a file named `buildGitrmSheathGpu.sh` with the following contents:
+
+```
+bdir=$PWD/build-GPU
 cmake --build $bdir --target install
 ```
+
+Make them executable:
+
+```
+chmod +x doConfigGitrmSheathGpu.sh buildGitrmSheathGpu.sh
+```
+
+Run the configure script then run the build script:
+
+```
+./doConfigGitrmSheathGpu.sh
+./buildGitrmSheathGpu.sh
+```
+
+To rebuild the code after making some changes:
+
+```
+./buildGitrmSheathGpu.sh
+```
+
 
 ### Building for CPU execution
 
