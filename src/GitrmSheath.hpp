@@ -263,6 +263,30 @@ void getWachpressCoeffs(Vector2 xp, Vector2 v1,
 }
 
 KOKKOS_INLINE_FUNCTION
+Vector2 getWachpressCoeffs(Vector2 xp, Int4View conn,
+			   Vector2View nodes,int parti_iel){
+    int numNodes = nodes.size();
+    //   0 1 ... n      vn = nodes(conn(parti_iel,i))   :Vector2View
+    // n 0 1 ... n 0    vn_gap                          :Vector2View
+    //  0 1 ... n       edges                            :Vector2View
+    //  0 1 ... n       p = xp - nodes(conn(parti_iel,i)):Vector2View
+    //  0 1 ... n       weights                          :DoubleView
+    //  ===================================================================
+    //  rearrange the edges n 1 2 ... n-1
+    //                   = double d = e(i).dot(p(i))/e(i).cross(p(i));
+    //                     double g = p(i).dot(e(???))/p(i).cross(e(???));
+    //                                          ??? = n 1 2 ... n-1
+    //                     double w(i) = (d+g)/p(i).magnitudesq();
+    //                     double wsum += w(i);
+    Vector2View edges("edges", numNodes);	      
+    DoubleView weights("weights", numNodes);
+   Vector2 prev,curr,next;
+    Kokkkos::parallel_for("WachpressCoeff", numNodes,KOKKOS_LAMBDA(const int ipart)){
+    
+}
+    // return nodes(conn(parti_iel,i))*weights/wsum +...
+}
+KOKKOS_INLINE_FUNCTION
 void getTriangleBC(Vector2 xp, Vector2 v1,
                     Vector2 v2, Vector2 v3,
                     Vector2 v4, double* lambda0,
