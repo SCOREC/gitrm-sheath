@@ -261,16 +261,18 @@ void getWachpressCoeffs(Vector2 xp, Vector2 v1,
 
 
 }
-
+///*
 KOKKOS_INLINE_FUNCTION
-Vector2 getWachpressCoeffs(Vector2 xp, Int4View conn,
-			   Vector2View nodes,int parti_iel){
-    int numNodes = nodes.size();
-    //   0 1 ... n      vn = nodes(conn(parti_iel,i))   :Vector2View
-    // n 0 1 ... n 0    vn_gap                          :Vector2View
-    //  0 1 ... n       edges                            :Vector2View
-    //  0 1 ... n       p = xp - nodes(conn(parti_iel,i)):Vector2View
-    //  0 1 ... n       weights                          :DoubleView
+void getWachpressCoeffs(Vector2 xp, 
+                        int numConn,
+			Vector2* v, 
+                        double* l){
+    // n max is conn_size
+    //   0 1 ... n      vn = nodes(conn(parti_iel,i))   :Vector2[]
+    //   0 1 ... n 0    vn shifts 				[+1]
+    //    0 1 ... n     edges                            :Vector2[]
+    //  0 1 ... n       p = xp - nodes(conn(parti_iel,i)):Vector2[]
+    //  0 1 ... n       weights                          :Double2[]
     //  ===================================================================
     //  rearrange the edges n 1 2 ... n-1
     //                   = double d = e(i).dot(p(i))/e(i).cross(p(i));
@@ -278,14 +280,36 @@ Vector2 getWachpressCoeffs(Vector2 xp, Int4View conn,
     //                                          ??? = n 1 2 ... n-1
     //                     double w(i) = (d+g)/p(i).magnitudesq();
     //                     double wsum += w(i);
-    Vector2View edges("edges", numNodes);	      
-    DoubleView weights("weights", numNodes);
-   Vector2 prev,curr,next;
-    Kokkkos::parallel_for("WachpressCoeff", numNodes,KOKKOS_LAMBDA(const int ipart)){
-    
-}
+    Vector2 e[8];
+    Vector2 p[8];
+    double w[8];
+    int i;
+    for(i = 0; i<numConn-1; i++){
+        e[i] = v[i+1] - v[i];
+        p[i] = xp - v[i];     
+    } 
+    //e4 = v1- v4
+    e[numConn -1] = v[0] - v[numConn - 1];
+    p[numConn -1] = xp - v[i];
+    double d,g, wsum = 0;
+    for(i = 1; i<numConn; i++){
+        d = e[i].dot(p[i])/e[i].cross(p[i]);
+        g = p[i].dot(e[i-1])/p[i].cross(e[i-1]);
+        w[i] = (d+g)/p[i].magnitudesq();
+        wsum += w[i];
+    }
+    d = e[0].dot(p[0])/e[0].cross(p[0]);
+    g = p[0].dot(e[numConn-1])/p[0].cross(e[numConn-1]);
+    w[0] = (d+g)/p[0].magnitudesq();
+    wsum += w[0];
+    for(i = 0; i<numConn; i++){
+        l[i] = w[i]/wsum;
+    }
     // return nodes(conn(parti_iel,i))*weights/wsum +...
+    //*/ 
+ //   return -1;
 }
+//*/
 KOKKOS_INLINE_FUNCTION
 void getTriangleBC(Vector2 xp, Vector2 v1,
                     Vector2 v2, Vector2 v3,

@@ -600,12 +600,12 @@ auto xp = getParticlePostions();
 auto eID = getParticleElementIDs();
 auto status = getParticleStatus();
 
+
 //TODO: maybe we can add a parallel_reduce for the conn
 Kokkos::parallel_for("Efield-2-particles",numParticles,KOKKOS_LAMBDA(const int ipart){
 if (status(ipart)){
 int iel = eID(ipart);
 double w1,w2,w3,w4;
-printf("%p\n",conn(iel));
 auto v1 = nodes(conn(iel,0));
 auto v2 = nodes(conn(iel,1));
 auto v3 = nodes(conn(iel,2));
@@ -615,16 +615,31 @@ printf("input particle coordinate:\n (%1.3e,%1.3e)\n",xp(ipart)[0],xp(ipart)[1])
 
 getWachpressCoeffs(xp(ipart),v1,v2,v3,v4,&w1,&w2,&w3,&w4);
 
-
 auto wp_coord = v1*w1+v2*w2+v3*w3+v4*w4;
+
 
 printf("coordinate from Wachspress interpolation:\n (%1.3e,%1.3e)\n",wp_coord[0],wp_coord[1]);
 
-//TODO:wp_coord = getWachpressCoeffs(xp(ipart),conn,nodes);										
+//auto test = conn(iel);
+//printf("\n%u\n", test);
+//TODO:wp_coord = getWachpressCoeffs(xp(ipart),conn,nodes,iel,8); //TODO: hardcoded 8 since each mesh have less then 8 ?									
 //auto diff = xp(ipart)-(v1*w1+v2*w2+v3*w3+v4*w4);
-
+double w[8];
+Vector2 v[8];
+int numEverts = 4;
+for(int i = 0; i<numEverts; i++){
+    v[i] = nodes(conn(iel,i));
+}
+getWachpressCoeffs(xp(ipart), numEverts, v, w);
 //printf("%1.3e,%1.3e\n",diff[0],diff[1]);
+Vector2 wp_coord2(0,0);
+for(int i = 0; i<numEverts; i++){
+	wp_coord2 = wp_coord2 + v[i]*w[i]; 
+	printf("%f %f %f\n",v[i][0],v[i][1],w[i]);
+}
 
+printf("coordinate from Wachspress interpolation:\n (%1.3e,%1.3e)\n",wp_coord2[0],wp_coord2[1]);
+printf("coordinate from Wachspress interpolation:\n (%1.3e,%1.3e)\n",wp_coord[0]-wp_coord2[0],wp_coord[1]-wp_coord2[1]);
 }
 														       });
 
