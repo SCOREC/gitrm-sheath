@@ -24,8 +24,10 @@
 
 namespace sheath {
 
+#define maxVerti 8
+
 using Vector2View = Kokkos::View<Vector2*>;
-using Int4View = Kokkos::View<int*[4]>;
+using Int4View = Kokkos::View<int*[maxVerti]>;
 using DoubleView = Kokkos::View<double*>;
 using IntView = Kokkos::View<int*>;
 using BoolView = Kokkos::View<bool*>;
@@ -89,6 +91,8 @@ Mesh initializeSheathMesh(int Nel_x,
                           std::string Efield_file);
 
 Mesh initializeSimpleMesh();
+
+Mesh initializeTestMesh();
 
 KOKKOS_INLINE_FUNCTION
 bool P2LCheck(Vector2 xp, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
@@ -261,7 +265,8 @@ void getWachpressCoeffs(Vector2 xp, Vector2 v1,
 
 
 }
-///*
+
+
 KOKKOS_INLINE_FUNCTION
 void getWachpressCoeffs(Vector2 xp, 
                         int numConn,
@@ -280,36 +285,27 @@ void getWachpressCoeffs(Vector2 xp,
     //                                          ??? = n 1 2 ... n-1
     //                     double w(i) = (d+g)/p(i).magnitudesq();
     //                     double wsum += w(i);
-    Vector2 e[8];
-    Vector2 p[8];
-    double w[8];
+    Vector2 e[maxVerti+1];
+    Vector2 p[maxVerti];
+    double w[maxVerti];
     int i;
-    for(i = 0; i<numConn-1; i++){
-        e[i] = v[i+1] - v[i];
+    for(i = 0; i<numConn; i++){
+        e[i+1] = v[i+1] - v[i];
         p[i] = xp - v[i];     
     } 
-    //e4 = v1- v4
-    e[numConn -1] = v[0] - v[numConn - 1];
-    p[numConn -1] = xp - v[i];
+    e[0] = e[numConn];
     double d,g, wsum = 0;
-    for(i = 1; i<numConn; i++){
-        d = e[i].dot(p[i])/e[i].cross(p[i]);
-        g = p[i].dot(e[i-1])/p[i].cross(e[i-1]);
+    for(i = 0; i<numConn; i++){
+        d = e[i+1].dot(p[i])/e[i+1].cross(p[i]);
+        g = p[i].dot(e[i])/p[i].cross(e[i]);
         w[i] = (d+g)/p[i].magnitudesq();
         wsum += w[i];
     }
-    d = e[0].dot(p[0])/e[0].cross(p[0]);
-    g = p[0].dot(e[numConn-1])/p[0].cross(e[numConn-1]);
-    w[0] = (d+g)/p[0].magnitudesq();
-    wsum += w[0];
     for(i = 0; i<numConn; i++){
         l[i] = w[i]/wsum;
     }
-    // return nodes(conn(parti_iel,i))*weights/wsum +...
-    //*/ 
- //   return -1;
 }
-//*/
+
 KOKKOS_INLINE_FUNCTION
 void getTriangleBC(Vector2 xp, Vector2 v1,
                     Vector2 v2, Vector2 v3,
