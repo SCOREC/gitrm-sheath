@@ -9,10 +9,10 @@ int main( int argc, char* argv[] ) {
 	// change seed (second argument) for different initial particle location
         auto part = sheath::initializeSingleParticle(mesh,rngSeed);
 	int npart = part.getTotalParticles();
-
         part.interpolateWachpress();	
     }
 
     Kokkos::finalize();
+    sheath::initializeTestMesh();
     return 0;
 }

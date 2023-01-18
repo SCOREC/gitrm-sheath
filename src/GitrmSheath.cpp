@@ -71,6 +71,36 @@ Mesh initializeSimpleMesh(){
    return Mesh(1,1,node,conn,elemFaceBdry,Nel,Nnp,Efield);
 }
 
+Mesh initializeTestMesh(){
+    //3 4 5 6 7 8
+    int Nel = 1;
+    int Nnp = 10;
+    //Vector2View node("node-coord-vector", Nnp);
+
+    //Vector2View::HostMirror h_node = Kokkos::create_mirror_view(node);
+    int i;
+    for(i = 0; i< Nnp; i++){
+       // auto rgen = rand_pool.get_state();
+        //double randx = Kokkos::rand<RandGen, double>::draw(rgen,0.0,1.0);
+        //printf("%.15f\n", randx);
+      //  h_node(i) = Vector2();
+    }
+/*
+    Kokkos::deep_copy(node, h_node);
+
+    Vector2View Efield("Efield-vector",Nnp); 
+    Int4View conn("elem-connectivty",Nel);
+    Int4View elemFaceBdry("elem-face-boundary",Nel);
+
+    Int4View::HostMirror h_conn = Kokkos::create_mirror_view(conn);
+    h_conn(0,0) = 0; 
+    Kokkos::deep_copy(conn, h_conn);
+
+    return Mesh(1,1,node,conn,elemFaceBdry,Nel,Nnp,Efield);
+*/
+    return Mesh();    
+}
+
 Mesh initializeSheathMesh(int Nel_x,
                           int Nel_y,
                           std::string coord_file,

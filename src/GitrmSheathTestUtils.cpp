@@ -620,7 +620,7 @@ auto wp_coord = v1*w1+v2*w2+v3*w3+v4*w4;
 printf("coordinate from Wachspress interpolation:\n (%1.3e,%1.3e)\n",wp_coord[0],wp_coord[1]);
 
 double w[maxVerti] = {0.0};// all init to 0.0 can 
-Vector2 v[maxVerti+1];
+Vector2 v[maxVerti+1] = {nodes(conn(iel,0))};
 int numEverts = 4;
 for(int i = 0; i<numEverts; i++){
     v[i] = nodes(conn(iel,i));
