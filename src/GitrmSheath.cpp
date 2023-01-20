@@ -72,20 +72,16 @@ Mesh initializeSimpleMesh(){
 }
 
 Mesh initializeTestMesh(){
-    //3 4 5 6 7 8
-    int Nel = 1;
-    int Nnp = 10;
-    //Vector2View node("node-coord-vector", Nnp);
-
-    //Vector2View::HostMirror h_node = Kokkos::create_mirror_view(node);
-    int i;
-    for(i = 0; i< Nnp; i++){
-       // auto rgen = rand_pool.get_state();
-        //double randx = Kokkos::rand<RandGen, double>::draw(rgen,0.0,1.0);
-        //printf("%.15f\n", randx);
-      //  h_node(i) = Vector2();
+    int Nel = 11;
+    int Nnp = 15;
+    double v_array[15][2] = {{0,0},{0.49,0},{1,0},{0.6,0.25},{0,0.5},{0.2,0.6},{0.31,0.6},{0.45,0.55},{0.6,0.4},{0.7,0.6},{1,0.54},{0.25,0.77},{0,1},{0.47,1},{1,1}};
+    int conn_array[11][8] = {{1,2,4,9,8,7,6,5},{2,3,4,-1,-1,-1,-1,-1},{4,3,9,-1,-1,-1,-1,-1},{9,3,11,10,-1,-1,-1,-1},{10,11,15,14,-1,-1,-1,-1},{8,9,10,14,-1,-1,-1,-1},{7,8,14,12,-1,-1,-1,-1},{13,12,14,-1,-1,-1,-1,-1},{6,7,12,-1,-1,-1,-1,-1},{6,12,13,-1,-1,-1,-1,-1},{5,6,13,-1,-1,-1,-1,-1}};
+    int node_array[11] = {8,3,3,4,4,4,4,3,3,3,3};
+    Vector2View node("node-coord-vector", Nnp);
+    Vector2View::HostMirror h_node = Kokkos::create_mirror_view(node);
+    for(int i=0; i<Nnp; i++){
+        h_node(i) = Vector2(v_array[i][0],v_array[i][1]); 
     }
-/*
     Kokkos::deep_copy(node, h_node);
 
     Vector2View Efield("Efield-vector",Nnp); 
@@ -93,12 +89,15 @@ Mesh initializeTestMesh(){
     Int4View elemFaceBdry("elem-face-boundary",Nel);
 
     Int4View::HostMirror h_conn = Kokkos::create_mirror_view(conn);
-    h_conn(0,0) = 0; 
+    for(int i=0; i<Nel; i++){
+        h_conn(i,0) = node_array[i];
+        for(int j=0; j<h_conn(i,0); j++){
+            h_conn(i,j+1) = conn_array[i][j];
+        }
+    }
     Kokkos::deep_copy(conn, h_conn);
 
-    return Mesh(1,1,node,conn,elemFaceBdry,Nel,Nnp,Efield);
-*/
-    return Mesh();    
+    return Mesh(1,1,node,conn,elemFaceBdry,Nel,Nnp,Efield);   
 }
 
 Mesh initializeSheathMesh(int Nel_x,
@@ -108,7 +107,7 @@ Mesh initializeSheathMesh(int Nel_x,
 
     int Nel = Nel_x * Nel_y;
     int Nnp = (Nel_x+1) * (Nel_y+1);
-
+    
     Vector2View node("node-coord-vector",Nnp);
 
     Vector2View::HostMirror h_node = Kokkos::create_mirror_view(node);

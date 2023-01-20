@@ -124,6 +124,30 @@ Particles initializeSingleParticle(Mesh meshObj, unsigned int rngSeed){
     return partObj;
 }
 
+Particles initializeTestParticles(Mesh meshObj){
+
+    int Nel = meshObj.getTotalElements();
+    int Nnp = meshObj.getTotalNodes();
+
+    auto nodes = meshObj.getNodesVector();
+    auto conn = meshObj.getConnectivity();
+    Vector2View positions("particle-positions",Nel);
+    IntView elementIDs("particle-elementIDs",Nel);
+    BoolView status("particle-status",Nel);
+    Kokkos::parallel_for("intialize-particle-position", Nel, KOKKOS_LAMBDA(const int iel){
+        int numConn = conn(iel,0);
+        double sum_x = 0.0, sum_y = 0.0;
+        for(int i=1; i<=numConn; i++){
+            sum_x += nodes(conn(iel,i)-1)[0];
+            sum_y += nodes(conn(iel,i)-1)[1];
+        }
+        positions(iel) = Vector2(sum_x/numConn, sum_y/numConn);
+        elementIDs(iel) = iel;
+        status(iel) = true;
+    });
+    return Particles(Nel, meshObj, positions, elementIDs, status);    
+}
+
 Vector2View getRandDisplacements(int numParticles, int rngSeed, double scaleFactor){
     Vector2View disp("random-displacements",numParticles);
     auto rand_pool = RandPool(rngSeed);
@@ -588,63 +612,41 @@ void Particles::interpolateTriEField(){
 
 void Particles::interpolateWachpress(){
 
-auto meshObj = getMeshObj();
-auto nodes = meshObj.getNodesVector();
-auto conn = meshObj.getConnectivity();
-auto Efield = meshObj.getEfieldVector();
-auto elemFaceBdry = meshObj.getElemFaceBdry();
-int Nel_x = meshObj.getTotalXElements();
-int Nel_y = meshObj.getTotalYElements();
-int numParticles = getTotalParticles();
-auto xp = getParticlePostions();
-auto eID = getParticleElementIDs();
-auto status = getParticleStatus();
+    auto meshObj = getMeshObj();
+    auto nodes = meshObj.getNodesVector();
+    auto conn = meshObj.getConnectivity();
+    auto Efield = meshObj.getEfieldVector();
+    auto elemFaceBdry = meshObj.getElemFaceBdry();
+    int Nel_x = meshObj.getTotalXElements();
+    int Nel_y = meshObj.getTotalYElements();
+    int numParticles = getTotalParticles();
+    auto xp = getParticlePostions();
+    auto eID = getParticleElementIDs();
+    auto status = getParticleStatus();
 
 
-Kokkos::parallel_for("Efield-2-particles",numParticles,KOKKOS_LAMBDA(const int ipart){
-if (status(ipart)){
-int iel = eID(ipart);
-double w1,w2,w3,w4;
-auto v1 = nodes(conn(iel,0));
-auto v2 = nodes(conn(iel,1));
-auto v3 = nodes(conn(iel,2));
-auto v4 = nodes(conn(iel,3));
+    //numParticles = 4;
+    Kokkos::parallel_for("Efield-2-particles",numParticles,KOKKOS_LAMBDA(const int ipart){
+        if (status(ipart)){
+            int iel = eID(ipart);
+            Vector2 wp_coord(0,0);
+            double w[maxVerti] = {0.0};// all init to 0.0 can 
+            Vector2 v[maxVerti+1] = {nodes(conn(iel,1))};
+            int numEverts = conn(iel,0);
+            for(int i = 1; i<=numEverts; i++){
+                v[i-1] = nodes(conn(iel,i)-1);
+            }
+            v[numEverts] = nodes(conn(iel,1)-1);
+            
+            getWachpressCoeffs(xp(ipart), numEverts, v, w);
 
-printf("input particle coordinate:\n (%1.3e,%1.3e)\n",xp(ipart)[0],xp(ipart)[1]);
+            for(int i = 0; i<numEverts; i++){
+	        wp_coord = wp_coord + v[i]*w[i]; 
+            }   
 
-getWachpressCoeffs(xp(ipart),v1,v2,v3,v4,&w1,&w2,&w3,&w4);
-
-auto wp_coord = v1*w1+v2*w2+v3*w3+v4*w4;
-
-
-printf("coordinate from Wachspress interpolation:\n (%1.3e,%1.3e)\n",wp_coord[0],wp_coord[1]);
-
-double w[maxVerti] = {0.0};// all init to 0.0 can 
-Vector2 v[maxVerti+1] = {nodes(conn(iel,0))};
-int numEverts = 4;
-for(int i = 0; i<numEverts; i++){
-    v[i] = nodes(conn(iel,i));
-}
-v[numEverts] = nodes(conn(iel,0));
-getWachpressCoeffs(xp(ipart), numEverts, v, w);
-Vector2 wp_coord2(0,0);
-
-printf("Test\n(%1.3e,%1.3e)\n",v[6][0],v[6][1]);
-for(int i = 0; i<numEverts; i++){
-	wp_coord2 = wp_coord2 + v[i]*w[i]; 
-}
-
-printf("(%1.3e,%1.3e)\n",wp_coord2[0],wp_coord2[1]);
-wp_coord2 = wp_coord2 + v[6]*w[6];
-printf("(%1.3e,%1.3e)\n",wp_coord2[0],wp_coord2[1]);
-printf("coordinate from new Wachspress interpolation:\n (%1.3e,%1.3e)\n",wp_coord2[0],wp_coord2[1]);
-printf("coordinate difference between two Wachspress interpolation:\n (%1.3e,%1.3e)\n",wp_coord[0]-wp_coord2[0],wp_coord[1]-wp_coord2[1]);
-
-//test zero weight
-
-}
-														       });
-
+            printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e): Wachpress(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coord[0],wp_coord[1]);
+        }
+    });
 }
 
 }

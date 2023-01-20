@@ -3,16 +3,14 @@ int main( int argc, char* argv[] ) {
 
     Kokkos::initialize(argc,argv);{
 	//initialaize simple mesh 
-        auto mesh = sheath::initializeSimpleMesh();
+        auto mesh = sheath::initializeTestMesh();
         // inititalizew single particle
-	int rngSeed = 1010;
+	// int rngSeed = 1010;
 	// change seed (second argument) for different initial particle location
-        auto part = sheath::initializeSingleParticle(mesh,rngSeed);
-	int npart = part.getTotalParticles();
+        auto part = sheath::initializeTestParticles(mesh);
         part.interpolateWachpress();	
     }
 
     Kokkos::finalize();
-    sheath::initializeTestMesh();
     return 0;
 }
