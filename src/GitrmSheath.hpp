@@ -92,7 +92,7 @@ Mesh initializeSheathMesh(int Nel_x,
 
 Mesh initializeSimpleMesh();
 
-Mesh initializeTestMesh();
+Mesh initializeTestMesh(int factor);
 
 KOKKOS_INLINE_FUNCTION
 bool P2LCheck(Vector2 xp, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
@@ -291,25 +291,14 @@ void getWachpressCoeffs(Vector2 xp,
     int i;
     for(i = 0; i<numConn; i++){
         e[i+1] = v[i+1] - v[i];
-//        if(numConn == 4){
-//            printf("%d:e(%.3f,%.3f) = v(%.3f,%.3f)-v(%.3f,%.3f)\n",i,e[i+1][0],e[i+1][1],v[i+1][0],v[i+1][1],v[i][0],v[i][1]);    
-//        }
         p[i] = xp - v[i];     
     } 
     e[0] = e[numConn];
-//    if(numConn == 4){
-//      for(i = 0; i<maxVerti; i++){
-//          printf("%.3f,%.3f\n",v[i][0],v[i][1]);
-//     }
-//    }
     double d,g, wsum = 0;
     for(i = 0; i<numConn; i++){
         d = e[i+1].dot(p[i])/e[i+1].cross(p[i]);
         g = p[i].dot(e[i])/p[i].cross(e[i]);
         w[i] = (d+g)/p[i].magnitudesq();
-//      if(numConn == 4){
-//          printf("v:%.3f,%.3f|%.3f:%.3f\n",xp[0],xp[1],d,g);
-//      }
         wsum += w[i];
     }
     for(i = 0; i<numConn; i++){

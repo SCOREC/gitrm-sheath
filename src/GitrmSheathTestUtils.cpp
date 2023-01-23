@@ -131,21 +131,66 @@ Particles initializeTestParticles(Mesh meshObj){
 
     auto nodes = meshObj.getNodesVector();
     auto conn = meshObj.getConnectivity();
-    Vector2View positions("particle-positions",Nel);
-    IntView elementIDs("particle-elementIDs",Nel);
-    BoolView status("particle-status",Nel);
-    Kokkos::parallel_for("intialize-particle-position", Nel, KOKKOS_LAMBDA(const int iel){
+    ///*
+    int numPart = 0; //need to do this on host
+    //  numPart++ by num vertices for elem -parallel reduction
+    Kokkos::parallel_reduce("sum_numVerti",Nel,KOKKOS_LAMBDA(const int& i, int& sum){
+        sum += conn(i,0);
+        //printf("%d\n", conn(i,0));
+    },numPart);
+    printf("%d-%d-%d\n",numPart,Nel,Nnp);
+    /* calc the positions once
+    Vector2View position("particle-positions",11);
+    Kokkos::parallel_for("initialize-positions",11, KOKKOS_LAMBDA(const int iel){
         int numConn = conn(iel,0);
         double sum_x = 0.0, sum_y = 0.0;
         for(int i=1; i<=numConn; i++){
             sum_x += nodes(conn(iel,i)-1)[0];
             sum_y += nodes(conn(iel,i)-1)[1];
         }
+        position(iel) = Vector2(sum_x/numConn, sum_y/numConn);
+    });
+    //*/
+    //  offset array -parallel scan
+    Int4View offset_conn("offset-connectivity",numPart);
+    Kokkos::parallel_scan("offset-array", Nel, KOKKOS_LAMBDA(int i, int& iel, bool is_final){
+        if(is_final){  
+            for(int j=0; j<conn(i,0); j++){
+                for(int k=0; k<=conn(i,0);k++){
+                    offset_conn(iel,k) = conn(i,k);
+                }
+                iel++;
+            }   
+        }
+        iel+= conn(i,0);
+    } );
+    //Kokkos::parallel_for("test", numPart, KOKKOS_LAMBDA(const int i){
+    //    printf("%d:(%d)%d\n",i,offset_conn(i,0),offset_conn(i,1));
+    //});
+    Nel = numPart;
+    Vector2View positions("particle-positions",Nel);
+    IntView elementIDs("particle-elementIDs",Nel);
+    BoolView status("particle-status",Nel);
+
+    Kokkos::parallel_for("intialize-particle-position", Nel, KOKKOS_LAMBDA(const int iel){
+        int numConn = offset_conn(iel,0);
+        //printf("%d-%d\n",iel,numConn);
+        double sum_x = 0.0, sum_y = 0.0;
+        for(int i=1; i<=numConn; i++){
+            sum_x += nodes(offset_conn(iel,i)-1)[0];
+            sum_y += nodes(offset_conn(iel,i)-1)[1];
+            //printf("%f-%f\n",nodes(offset_conn(iel,i)-1)[0], nodes(offset_conn(iel,i)-1)[1]);
+        }
         positions(iel) = Vector2(sum_x/numConn, sum_y/numConn);
         elementIDs(iel) = iel;
         status(iel) = true;
     });
-    return Particles(Nel, meshObj, positions, elementIDs, status);    
+    
+    //Kokkos::parallel_for("test-check", Nel, KOKKOS_LAMBDA(const int iel){
+    //    printf("%d-%.3f,%.3f\n",iel, positions(iel)[0],positions(iel)[1]);
+    //});
+    Mesh temp(1,1,nodes,offset_conn,meshObj.getElemFaceBdry(),Nel,Nnp,meshObj.getEfieldVector());
+    return Particles(Nel, temp, positions, elementIDs, status);    
 }
 
 Vector2View getRandDisplacements(int numParticles, int rngSeed, double scaleFactor){
@@ -610,7 +655,7 @@ void Particles::interpolateTriEField(){
 }
 
 
-void Particles::interpolateWachpress(){
+void Particles::interpolateWachpress(int factor){
 
     auto meshObj = getMeshObj();
     auto nodes = meshObj.getNodesVector();
@@ -626,7 +671,7 @@ void Particles::interpolateWachpress(){
 
 
     //numParticles = 4;
-    Kokkos::parallel_for("Efield-2-particles",numParticles,KOKKOS_LAMBDA(const int ipart){
+    Kokkos::parallel_for("Efield-2-particles-for-"+std::to_string(factor),numParticles,KOKKOS_LAMBDA(const int ipart){
         if (status(ipart)){
             int iel = eID(ipart);
             Vector2 wp_coord(0,0);
@@ -643,8 +688,10 @@ void Particles::interpolateWachpress(){
             for(int i = 0; i<numEverts; i++){
 	        wp_coord = wp_coord + v[i]*w[i]; 
             }   
+            //if(iel%11 == 0){
+                printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e): Wachpress(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coord[0],wp_coord[1]);
+            //}
 
-            printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e): Wachpress(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coord[0],wp_coord[1]);
         }
     });
 }
