@@ -152,44 +152,40 @@ Particles initializeTestParticles(Mesh meshObj){
     });
     //*/
     //  offset array -parallel scan
-    IntView offset_conn("offset-connectivity",numPart);
-    Kokkos::parallel_scan("offset-array", Nel, KOKKOS_LAMBDA(int i, int& iel, bool is_final){
+    IntView particleToElement("particleToElement",numPart);
+    Kokkos::parallel_scan("setParticleToElement", Nel, KOKKOS_LAMBDA(int i, int& ipart, bool is_final){
         if(is_final){  
             for(int j=0; j<conn(i,0); j++){
-                offset_conn(iel) = i;
-                iel++;
+                particleToElement(ipart+j) = i;
             }   
         }
-        iel+= conn(i,0);
+        ipart += conn(i,0);
     } );
     //Kokkos::parallel_for("test", numPart, KOKKOS_LAMBDA(const int i){
-    //    printf("%d:(%d)\n",i,offset_conn(i));
+    //   printf("%d:(%d)\n",i,particleToElement(i));
     //});
-    Nel = numPart;
-    Vector2View positions("particle-positions",Nel);
-    IntView elementIDs("particle-elementIDs",Nel);
-    BoolView status("particle-status",Nel);
+    Vector2View positions("particle-positions",numPart);
+    IntView elementIDs("particle-elementIDs",numPart);
+    BoolView status("particle-status",numPart);
 
-    Kokkos::parallel_for("intialize-particle-position", Nel, KOKKOS_LAMBDA(const int iel){
-        int offset_iel = offset_conn(iel);
-        int numConn = conn(offset_iel,0);
-        //printf("%d-%d\n",iel,numConn);
+    Kokkos::parallel_for("intialize-particle-position", numPart, KOKKOS_LAMBDA(const int iPart){
+        int iel = particleToElement(iPart);
+        int numVerti = conn(iel,0);
         double sum_x = 0.0, sum_y = 0.0;
-        for(int i=1; i<=numConn; i++){
-            sum_x += nodes(conn(offset_iel,i)-1)[0];
-            sum_y += nodes(conn(offset_iel,i)-1)[1];
-            //printf("%f-%f\n",nodes(offset_conn(iel,i)-1)[0], nodes(offset_conn(iel,i)-1)[1]);
+        for(int i=1; i<= numVerti; i++){
+            sum_x += nodes(conn(iel,i)-1)[0];
+            sum_y += nodes(conn(iel,i)-1)[1];
         }
-        positions(iel) = Vector2(sum_x/numConn, sum_y/numConn);
-        elementIDs(iel) = iel;
-        status(iel) = true;
+        positions(iPart) = Vector2(sum_x/numVerti, sum_y/numVerti);
+        elementIDs(iPart) = iel;
+        status(iPart) = true;
     });
     
-    //Kokkos::parallel_for("test-check", Nel, KOKKOS_LAMBDA(const int iel){
-    //    printf("%d-%.3f,%.3f\n",iel, positions(iel)[0],positions(iel)[1]);
+    //Kokkos::parallel_for("test-check", numPart, KOKKOS_LAMBDA(const int iPart){
+    //    printf("%d: %.3f,%.3f\n",iPart, positions(iPart)[0],positions(iPart)[1]);
     //});
     //Mesh temp(1,1,nodes,offset_conn,meshObj.getElemFaceBdry(),Nel,Nnp,meshObj.getEfieldVector());
-    return Particles(Nel, meshObj, positions, elementIDs, status);    
+    return Particles(numPart, meshObj, positions, elementIDs, status);    
 }
 
 Vector2View getRandDisplacements(int numParticles, int rngSeed, double scaleFactor){
@@ -688,7 +684,7 @@ void Particles::interpolateWachpress(int factor){
 	        wp_coord = wp_coord + v[i]*w[i]; 
             }   
             //if(iel%11 == 0){
-            //    printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e): Wachpress(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coord[0],wp_coord[1]);
+                printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e): Wachpress(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coord[0],wp_coord[1]);
             //}
 
         }

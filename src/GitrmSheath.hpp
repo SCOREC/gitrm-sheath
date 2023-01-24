@@ -269,7 +269,7 @@ void getWachpressCoeffs(Vector2 xp, Vector2 v1,
 
 KOKKOS_INLINE_FUNCTION
 void getWachpressCoeffs(Vector2 xp, 
-                        int numConn,
+                        int numVerti,//numVerti
 			Vector2* v, 
                         double* l){
     // n max is conn_size
@@ -289,19 +289,19 @@ void getWachpressCoeffs(Vector2 xp,
     Vector2 p[maxVerti];
     double w[maxVerti];
     int i;
-    for(i = 0; i<numConn; i++){
+    for(i = 0; i<numVerti; i++){
         e[i+1] = v[i+1] - v[i];
         p[i] = xp - v[i];     
     } 
-    e[0] = e[numConn];
+    e[0] = e[numVerti];
     double d,g, wsum = 0;
-    for(i = 0; i<numConn; i++){
+    for(i = 0; i<numVerti; i++){
         d = e[i+1].dot(p[i])/e[i+1].cross(p[i]);
         g = p[i].dot(e[i])/p[i].cross(e[i]);
         w[i] = (d+g)/p[i].magnitudesq();
         wsum += w[i];
     }
-    for(i = 0; i<numConn; i++){
+    for(i = 0; i<numVerti; i++){
         l[i] = w[i]/wsum;
     }
 }
