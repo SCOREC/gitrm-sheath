@@ -1,4 +1,6 @@
 #include "GitrmSheathTestUtils.hpp"
+#include <Kokkos_Core.hpp>
+#include <Kokkos_Random.hpp>
 
 namespace sheath{
 
@@ -134,11 +136,11 @@ Particles initializeTestParticles(Mesh meshObj){
     ///*
     int numPart = 0; //need to do this on host
     //  numPart++ by num vertices for elem -parallel reduction
-    Kokkos::parallel_reduce("sum_numVerti",Nel,KOKKOS_LAMBDA(const int& i, int& sum){
-        sum += conn(i,0);
+    //Kokkos::parallel_reduce("sum_numVerti",Nel,KOKKOS_LAMBDA(const int& i, int& sum){
+    //    sum += conn(i,0);
         //printf("%d\n", conn(i,0));
-    },numPart);
-    printf("%d-%d-%d\n",numPart,Nel,Nnp);
+    //},numPart);
+    //printf("%d-%d-%d\n",numPart,Nel,Nnp);
     /* calc the positions once
     Vector2View position("particle-positions",11);
     Kokkos::parallel_for("initialize-positions",11, KOKKOS_LAMBDA(const int iel){
@@ -152,15 +154,25 @@ Particles initializeTestParticles(Mesh meshObj){
     });
     //*/
     //  offset array -parallel scan
+    IntView numParticlesPerElement("numParticlesPerElement",Nel);
+    Kokkos::Random_XorShift64_Pool<> random_pool(/*seed=*/12345);
+    Kokkos::parallel_for("setnumParticles",Nel, KOKKOS_LAMBDA(const int i){
+        auto generator = random_pool.get_state();
+        numParticlesPerElement(i) = generator.urand(4,7);   
+    });
+    Kokkos::parallel_reduce("totalParticles",Nel,KOKKOS_LAMBDA(const int&i, int& sum){
+        sum += numParticlesPerElement(i);
+    },numPart);
     IntView particleToElement("particleToElement",numPart);
     Kokkos::parallel_scan("setParticleToElement", Nel, KOKKOS_LAMBDA(int i, int& ipart, bool is_final){
         if(is_final){  
-            for(int j=0; j<conn(i,0); j++){
+            for(int j=0; j<numParticlesPerElement(i); j++){
                 particleToElement(ipart+j) = i;
             }   
         }
-        ipart += conn(i,0);
-    } );
+        ipart += numParticlesPerElement(i); 
+    },numPart);
+    printf("numPart: %d,Nel*6: %d\n",numPart,Nel*6);
     //Kokkos::parallel_for("test", numPart, KOKKOS_LAMBDA(const int i){
     //   printf("%d:(%d)\n",i,particleToElement(i));
     //});
@@ -664,27 +676,40 @@ void Particles::interpolateWachpress(int factor){
     auto eID = getParticleElementIDs();
     auto status = getParticleStatus();
 
-
-    //numParticles = 4;
+    //100 1000 10000 100000 1000000
     Kokkos::parallel_for("Efield-2-particles-for-"+std::to_string(factor),numParticles,KOKKOS_LAMBDA(const int ipart){
         if (status(ipart)){
             int iel = eID(ipart);
-            Vector2 wp_coord(0,0);
-            double w[maxVerti] = {0.0};// all init to 0.0 can 
-            Vector2 v[maxVerti+1] = {nodes(conn(iel,1))};
+            //Vector2 wp_coord(0,0);
+            //double w[maxVerti] = {0.0};// all init to 0.0 can 
+            //Vector2 v[maxVerti+1] = {nodes(conn(iel,1))};
+            std::array<Vector2,maxVerti+1> v;
+            v.fill(nodes(conn(iel,1)));
             int numEverts = conn(iel,0);
             for(int i = 1; i<=numEverts; i++){
                 v[i-1] = nodes(conn(iel,i)-1);
             }
             v[numEverts] = nodes(conn(iel,1)-1);
             
-            getWachpressCoeffs(xp(ipart), numEverts, v, w);
-
-            for(int i = 0; i<numEverts; i++){
-	        wp_coord = wp_coord + v[i]*w[i]; 
+            //getWachpressCoeffs(xp(ipart), numEverts, v, w);
+            //if(numEverts != maxVerti){
+            //    for(int i = numEverts+1; i<maxVerti+1; i++ ){
+            //        v[i] = v[numEverts];
+            //    }
+            //}
+ 
+            //double wByArea[maxVerti] = {0.0}; //check this
+            std::array<double,maxVerti> wByArea;
+            wByArea.fill(0.0);
+            getWachpressCoeffsByArea(xp(ipart), numEverts, v, wByArea);
+            Vector2 wp_coordByArea(0,0);
+            for(int i = 0; i<maxVerti; i++){
+	      //  wp_coord = wp_coord + v[i]*w[i]; 
+	        wp_coordByArea = wp_coordByArea + v[i]*wByArea[i]; 
             }   
+            
             //if(iel%11 == 0){
-                printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e): Wachpress(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coord[0],wp_coord[1]);
+              printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e) WachpressByArea:(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coordByArea[0],wp_coordByArea[1]);
             //}
 
         }

@@ -269,8 +269,8 @@ void getWachpressCoeffs(Vector2 xp, Vector2 v1,
 
 KOKKOS_INLINE_FUNCTION
 void getWachpressCoeffs(Vector2 xp, 
-                        int numVerti,//numVerti
-			Vector2* v, 
+                        int numVerti,
+			Vector2* v,
                         double* l){
     // n max is conn_size
     //   0 1 ... n      vn = nodes(conn(parti_iel,i))   :Vector2[]
@@ -303,6 +303,54 @@ void getWachpressCoeffs(Vector2 xp,
     }
     for(i = 0; i<numVerti; i++){
         l[i] = w[i]/wsum;
+    }
+}
+
+KOKKOS_INLINE_FUNCTION
+void getWachpressCoeffsByArea(Vector2 xp,
+                              int numVerti,
+			      std::array<Vector2, maxVerti+1> v, 
+                              std::array<double, maxVerti> l){
+    Vector2 e[maxVerti+1];
+    Vector2 p[maxVerti];
+    double w[maxVerti];
+    ///*
+    for(int i = 0; i<numVerti; i++){
+        e[i+1] = v[i+1] -v[i];
+        //if(numVerti == 3){
+        //    printf("e[%d](%.3f,%.3f)\n",i+1, e[i+1][0],e[i+1][1]);
+        //}
+        p[i] = v[i] - xp;
+    }
+    e[0] = e[numVerti];
+    if(numVerti == 3){
+        //printf("e[%d](%.3f,%.3f)\n",0, e[0][0],e[0][1]);
+    }
+    
+    double c[maxVerti];
+    double a[maxVerti];
+    for(int i = 0; i<numVerti; i++){
+        c[i] = e[i].cross(e[i+1]);
+        a[i] = p[i].cross(e[i+1]);
+       // printf("c: %.3f, a: %.3f\n",c[i],a[i]);
+    }
+    double wSum = 0.0;
+    for(int i = 0; i<numVerti; i++){
+        double aProduct = 1.0;
+        for(int j = 0;j<numVerti-2; j++){
+            //if(i == j or i-1 == j) aProduct /= a[j];
+            aProduct *= a[(j+i+1)%numVerti];// each vertex goes to vertexNumber(i)-2
+            //printf("numVerti: %d,i: %d, j: %d, i+j+1|numVerti: %d\n", numVerti, i, j,(i+j+1)%numVerti);
+        }
+        w[i] = c[i] * aProduct;
+        wSum += w[i];
+    }
+    //*/
+    for(int i = 0; i<numVerti; i++){
+        l[i] = w[i]/wSum;
+        //if(numVerti == 3){
+        //    printf("w[%d],wSum = %.3f, %.3f \n",i, w[i], wSum);
+        //}
     }
 }
 
