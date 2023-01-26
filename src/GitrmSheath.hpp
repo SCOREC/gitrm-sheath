@@ -309,8 +309,8 @@ void getWachpressCoeffs(Vector2 xp,
 KOKKOS_INLINE_FUNCTION
 void getWachpressCoeffsByArea(Vector2 xp,
                               int numVerti,
-			      std::array<Vector2, maxVerti+1> v, 
-                              std::array<double, maxVerti> l){
+			      Vector2* v, 
+                              double* l){
     Vector2 e[maxVerti+1];
     Vector2 p[maxVerti];
     double w[maxVerti];
@@ -323,9 +323,9 @@ void getWachpressCoeffsByArea(Vector2 xp,
         p[i] = v[i] - xp;
     }
     e[0] = e[numVerti];
-    if(numVerti == 3){
+    //if(numVerti == 3){
         //printf("e[%d](%.3f,%.3f)\n",0, e[0][0],e[0][1]);
-    }
+    //}
     
     double c[maxVerti];
     double a[maxVerti];
@@ -615,6 +615,21 @@ FaceDir MacphersonCheckForNorthEntry(Vector2 xp, Vector2 dx, Vector2 v1, Vector2
     }
     else{
         return minValueFaceDir(l1,l2,l3,l4);
+    }
+}
+
+
+KOKKOS_INLINE_FUNCTION
+void initArrayWith(Vector2 arr[],int n, Vector2 fill){
+    for(int i=0; i<n; i++){
+        arr[i] = fill;
+    }
+}
+
+KOKKOS_INLINE_FUNCTION
+void initArrayWith(double arr[],int n, double fill){
+    for(int i=0; i<n; i++){
+        arr[i] = fill;
     }
 }
 

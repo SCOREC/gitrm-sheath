@@ -133,7 +133,7 @@ Particles initializeTestParticles(Mesh meshObj){
 
     auto nodes = meshObj.getNodesVector();
     auto conn = meshObj.getConnectivity();
-    ///*
+   ///*
     int numPart = 0; //need to do this on host
     //  numPart++ by num vertices for elem -parallel reduction
     //Kokkos::parallel_reduce("sum_numVerti",Nel,KOKKOS_LAMBDA(const int& i, int& sum){
@@ -199,6 +199,30 @@ Particles initializeTestParticles(Mesh meshObj){
     //Mesh temp(1,1,nodes,offset_conn,meshObj.getElemFaceBdry(),Nel,Nnp,meshObj.getEfieldVector());
     return Particles(numPart, meshObj, positions, elementIDs, status);    
 }
+
+void assembly(Mesh meshObj){
+    int Nel = meshObj.getTotalElements();
+    int Nnp = meshObj.getTotalNodes();
+    
+    auto nodes = meshObj.getNodesVector();
+    auto conn = meshObj.getConnectivity();
+    
+    IntView vfield("vField",Nnp);
+
+    Kokkos::parallel_for("vertex_assem",Nel, KOKKOS_LAMBDA(const int iel){
+        int nVertsE = conn(iel,0);
+    
+        for(int i=0; i<nVertsE; i++){
+            int vID = conn(iel,i+1)-1;
+            atomic_increment(&vfield(vID));
+            //atomic_add(&vfield(vID),1);
+        }
+    });
+    //Kokkos::parallel_for("vfield_check",Nnp, KOKKOS_LAMBDA(const int inp){
+    //    printf("vfield(%d): %d",inp,vfield(inp));
+    //});
+}
+
 
 Vector2View getRandDisplacements(int numParticles, int rngSeed, double scaleFactor){
     Vector2View disp("random-displacements",numParticles);
@@ -682,9 +706,9 @@ void Particles::interpolateWachpress(int factor){
             int iel = eID(ipart);
             //Vector2 wp_coord(0,0);
             //double w[maxVerti] = {0.0};// all init to 0.0 can 
-            //Vector2 v[maxVerti+1] = {nodes(conn(iel,1))};
-            std::array<Vector2,maxVerti+1> v;
-            v.fill(nodes(conn(iel,1)));
+            Vector2 v[maxVerti+1] = {nodes(conn(iel,1))};
+            //std::array<Vector2,maxVerti+1> v;
+            initArrayWith(v,maxVerti+1,nodes(conn(iel,1)));
             int numEverts = conn(iel,0);
             for(int i = 1; i<=numEverts; i++){
                 v[i-1] = nodes(conn(iel,i)-1);
@@ -698,9 +722,10 @@ void Particles::interpolateWachpress(int factor){
             //    }
             //}
  
-            //double wByArea[maxVerti] = {0.0}; //check this
-            std::array<double,maxVerti> wByArea;
-            wByArea.fill(0.0);
+            double wByArea[maxVerti] = {0.0}; //check this
+            //printf("test%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",wByArea[0],wByArea[1],wByArea[2],wByArea[3],wByArea[4],wByArea[5],wByArea[6],wByArea[7]);
+            //std::array<double,maxVerti> wByArea;
+            initArrayWith(wByArea,maxVerti,0.0);
             getWachpressCoeffsByArea(xp(ipart), numEverts, v, wByArea);
             Vector2 wp_coordByArea(0,0);
             for(int i = 0; i<maxVerti; i++){
@@ -709,7 +734,7 @@ void Particles::interpolateWachpress(int factor){
             }   
             
             //if(iel%11 == 0){
-              printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e) WachpressByArea:(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coordByArea[0],wp_coordByArea[1]);
+            //printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e) WachpressByArea:(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coordByArea[0],wp_coordByArea[1]);
             //}
 
         }
