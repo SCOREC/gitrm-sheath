@@ -27,7 +27,7 @@ public:
     void MacphersonTracking(Vector2View dx);
     void interpolateQuadEField();
     void interpolateTriEField();
-    void interpolateWachpress(int factor);
+    void interpolateWachpress();
     Particles(){};
 
     Particles(int numParticles,

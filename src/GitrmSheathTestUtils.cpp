@@ -1,6 +1,7 @@
 #include "GitrmSheathTestUtils.hpp"
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
+#include <Kokkos_Atomic.hpp>
 
 namespace sheath{
 
@@ -172,7 +173,7 @@ Particles initializeTestParticles(Mesh meshObj){
         }
         ipart += numParticlesPerElement(i); 
     },numPart);
-    printf("numPart: %d,Nel*6: %d\n",numPart,Nel*6);
+    //printf("numPart: %d,Nel*6: %d\n",numPart,Nel*6);
     //Kokkos::parallel_for("test", numPart, KOKKOS_LAMBDA(const int i){
     //   printf("%d:(%d)\n",i,particleToElement(i));
     //});
@@ -206,7 +207,7 @@ void assembly(Mesh meshObj){
     
     auto nodes = meshObj.getNodesVector();
     auto conn = meshObj.getConnectivity();
-    
+    //numElemsPerNode
     IntView vfield("vField",Nnp);
 
     Kokkos::parallel_for("vertex_assem",Nel, KOKKOS_LAMBDA(const int iel){
@@ -214,12 +215,12 @@ void assembly(Mesh meshObj){
     
         for(int i=0; i<nVertsE; i++){
             int vID = conn(iel,i+1)-1;
-            atomic_increment(&vfield(vID));
-            //atomic_add(&vfield(vID),1);
+            //atomic_increment(&vfield(vID));
+            Kokkos::atomic_add(&vfield(vID),2.5);
         }
     });
     //Kokkos::parallel_for("vfield_check",Nnp, KOKKOS_LAMBDA(const int inp){
-    //    printf("vfield(%d): %d",inp,vfield(inp));
+    //    printf("vfield(%d): %.3f\n",inp,vfield(inp));
     //});
 }
 
@@ -686,7 +687,7 @@ void Particles::interpolateTriEField(){
 }
 
 
-void Particles::interpolateWachpress(int factor){
+void Particles::interpolateWachpress(){
 
     auto meshObj = getMeshObj();
     auto nodes = meshObj.getNodesVector();
@@ -701,7 +702,7 @@ void Particles::interpolateWachpress(int factor){
     auto status = getParticleStatus();
 
     //100 1000 10000 100000 1000000
-    Kokkos::parallel_for("Efield-2-particles-for-"+std::to_string(factor),numParticles,KOKKOS_LAMBDA(const int ipart){
+    Kokkos::parallel_for("Efield-2-particles factor(1000)",numParticles,KOKKOS_LAMBDA(const int ipart){
         if (status(ipart)){
             int iel = eID(ipart);
             //Vector2 wp_coord(0,0);
@@ -722,7 +723,7 @@ void Particles::interpolateWachpress(int factor){
             //    }
             //}
  
-            double wByArea[maxVerti] = {0.0}; //check this
+            double wByArea[maxVerti] = {0.0};
             //printf("test%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",wByArea[0],wByArea[1],wByArea[2],wByArea[3],wByArea[4],wByArea[5],wByArea[6],wByArea[7]);
             //std::array<double,maxVerti> wByArea;
             initArrayWith(wByArea,maxVerti,0.0);

@@ -11,7 +11,7 @@ int main( int argc, char* argv[] ) {
 	// int rngSeed = 1010;
 	// change seed (second argument) for different initial particle location
         auto part = sheath::initializeTestParticles(mesh);
-        part.interpolateWachpress(factorOfMesh);	
+        part.interpolateWachpress();	
         sheath::assembly(mesh);
         //}
     }
