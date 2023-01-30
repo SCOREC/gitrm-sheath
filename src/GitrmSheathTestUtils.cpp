@@ -160,7 +160,11 @@ Particles initializeTestParticles(Mesh meshObj){
     Kokkos::parallel_for("setnumParticles",Nel, KOKKOS_LAMBDA(const int i){
         auto generator = random_pool.get_state();
         numParticlesPerElement(i) = generator.urand(4,7);   
+        random_pool.free_state(generator);
+        //numParticlesPerElement(i) = 6;
     });
+    Kokkos::fence();
+    
     Kokkos::parallel_reduce("totalParticles",Nel,KOKKOS_LAMBDA(const int&i, int& sum){
         sum += numParticlesPerElement(i);
     },numPart);
@@ -701,8 +705,9 @@ void Particles::interpolateWachpress(){
     auto eID = getParticleElementIDs();
     auto status = getParticleStatus();
 
-    //100 1000 10000 100000 1000000
-    Kokkos::parallel_for("Efield-2-particles factor(1000)",numParticles,KOKKOS_LAMBDA(const int ipart){
+    //100 1000 10000 100000 1000000 |(mem out)10000000
+    //numParticles = 100;
+    Kokkos::parallel_for("Efield-2-particles factor(1000000)",numParticles,KOKKOS_LAMBDA(const int ipart){
         if (status(ipart)){
             int iel = eID(ipart);
             //Vector2 wp_coord(0,0);
