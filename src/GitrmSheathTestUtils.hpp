@@ -48,7 +48,8 @@ Particles initializeSingleParticle(Mesh meshObj, unsigned int rngSeed);
 Vector2View getRandDisplacements(int numParticles, int rngSeed, double scaleFactor);
 
 Particles initializeTestParticles(Mesh meshObj);
-void assembly(Mesh meshObj);
+
+void assembly(Mesh meshObj, Particles partObj);
 }
 
 #endif

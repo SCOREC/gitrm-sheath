@@ -34,6 +34,15 @@ Int4View Mesh::getElemFaceBdry(){
     return elemFaceBdry_;
 }
 
+IntView Mesh::getElem2Particles(){
+    return elem2Particles_;
+}
+
+void Mesh::setElem2Particles(IntView elem2Particles){
+    elem2Particles_ = IntView("elementToParticles",elem2Particles.size());
+    Kokkos::deep_copy(elem2Particles_, elem2Particles);
+}
+
 Mesh initializeSimpleMesh(){
    int Nel = 1;
    int Nnp = 4;

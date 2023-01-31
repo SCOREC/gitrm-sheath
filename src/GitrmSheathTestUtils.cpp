@@ -169,10 +169,15 @@ Particles initializeTestParticles(Mesh meshObj){
         sum += numParticlesPerElement(i);
     },numPart);
     IntView particleToElement("particleToElement",numPart);
+
+    IntView elem2Particles("elementToParticles",Nel*(maxParts+1));//maxParts=8
     Kokkos::parallel_scan("setParticleToElement", Nel, KOKKOS_LAMBDA(int i, int& ipart, bool is_final){
+        //do the elem2Particles
         if(is_final){  
+            elem2Particles(i*(maxParts+1)) = numParticlesPerElement(i);
             for(int j=0; j<numParticlesPerElement(i); j++){
                 particleToElement(ipart+j) = i;
+                elem2Particles(i*(maxParts+1)+j+1) = ipart+j;
             }   
         }
         ipart += numParticlesPerElement(i); 
@@ -202,30 +207,41 @@ Particles initializeTestParticles(Mesh meshObj){
     //    printf("%d: %.3f,%.3f\n",iPart, positions(iPart)[0],positions(iPart)[1]);
     //});
     //Mesh temp(1,1,nodes,offset_conn,meshObj.getElemFaceBdry(),Nel,Nnp,meshObj.getEfieldVector());
+    meshObj.setElem2Particles(elem2Particles);
     return Particles(numPart, meshObj, positions, elementIDs, status);    
 }
 
-void assembly(Mesh meshObj){
+void assembly(Mesh meshObj, Particles partObj){
     int Nel = meshObj.getTotalElements();
     int Nnp = meshObj.getTotalNodes();
-    
+
+    int numParti = partObj.getTotalParticles();
+    auto eID = partObj.getParticleElementIDs();   
+ 
     auto nodes = meshObj.getNodesVector();
     auto conn = meshObj.getConnectivity();
     //numElemsPerNode
-    IntView vfield("vField",Nnp);
+/*
+    Int4View elemToParti("elementToParticles",Nel);
 
-    Kokkos::parallel_for("vertex_assem",Nel, KOKKOS_LAMBDA(const int iel){
-        int nVertsE = conn(iel,0);
-    
-        for(int i=0; i<nVertsE; i++){
-            int vID = conn(iel,i+1)-1;
-            //atomic_increment(&vfield(vID));
-            Kokkos::atomic_add(&vfield(vID),2.5);
+    Kokkos::parallel_for("elementToParticle_assem",numParti, KOKKOS_LAMBDA(const int ipart){
+        int iel = eID(ipart);   
+        
+        Kokkos::atomic_store(&elemToParti(iel,++elemToParti(iel,0)),ipart);
+        Kokkos::atomic_increment(&elemToParti(iel,0));
+        printf("ETP(%d)[%d]:%d\n",iel,elemToParti(iel,0),ipart);
+    });
+
+    auto xp = partObj.getParticlePostions();
+    Kokkos::parallel_for("ETPcheck",Nel, KOKKOS_LAMBDA(const int iel){
+        int elSize = elemToParti(iel,0);
+        //printf("\nelement ID: %d,size: %d, ", iel, elSize);
+        for(int i=1; i<= elSize; i++){
+            int ipart = elemToParti(iel,i);
+            printf("%d,%d,(%d): (%.3f,%.3f) \n",iel,ipart,i,xp(ipart)[0],xp(ipart)[1]);
         }
     });
-    //Kokkos::parallel_for("vfield_check",Nnp, KOKKOS_LAMBDA(const int inp){
-    //    printf("vfield(%d): %.3f\n",inp,vfield(inp));
-    //});
+//*/
 }
 
 

@@ -25,6 +25,7 @@
 namespace sheath {
 
 #define maxVerti 8
+#define maxParts 8
 
 using Vector2View = Kokkos::View<Vector2*>;
 using Int4View = Kokkos::View<int*[maxVerti+1]>;
@@ -50,7 +51,8 @@ private:
     DoubleView fracArea_;
 
     Vector2View Efield_;
-
+    
+    IntView elem2Particles_;
 public:
     Mesh(){};
 
@@ -71,6 +73,25 @@ public:
          nnpTotal_(nnpTotal),
          Efield_(Efield){};
 
+    Mesh(int Nel_x,
+         int Nel_y,
+         Vector2View nodes,
+         Int4View conn,
+         Int4View elemFaceBdry,
+         int nelTotal,
+         int nnpTotal,
+         Vector2View Efield,
+         IntView elem2Particles):
+         Nel_x_(Nel_x),
+         Nel_y_(Nel_y),
+         nodes_(nodes),
+         conn_(conn),
+         elemFaceBdry_(elemFaceBdry),
+         nelTotal_(nelTotal),
+         nnpTotal_(nnpTotal),
+         Efield_(Efield),
+         elem2Particles_(elem2Particles){};
+
     int getTotalNodes();
     int getTotalElements();
     int getTotalXElements();
@@ -82,7 +103,8 @@ public:
     void computeFractionalElementArea();
     double getTotalArea();
     DoubleView getFractionalElementAreas();
-
+    IntView getElem2Particles();
+    void setElem2Particles(IntView elem2Particles);
 };
 
 Mesh initializeSheathMesh(int Nel_x,
