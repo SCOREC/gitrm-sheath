@@ -220,28 +220,22 @@ void assembly(Mesh meshObj, Particles partObj){
     
     auto nodes = meshObj.getNodesVector();
     auto conn = meshObj.getConnectivity();
-    //numElemsPerNode
 ///*
-    Int4View verti2Elem("nodesToElement",Nnp);
+    Int4View verti2Elem("verticesToElement",Nnp);
     
-    IntView vfield("vField",Nnp);
-
     Kokkos::parallel_for("vertiToParticle_assem",Nel, KOKKOS_LAMBDA(const int iel){
         int numEverts = conn(iel,0);
         for(int i = 1; i<=numEverts; i++){
-            //v2E[conn(iel,i)-1][aaf(v2E[conn(iel,i)-1][0])] = iel
-            Kokkos::atomic_store(&verti2Elem(conn(iel,i)-1,Kokkos::atomic_add_fetch(&verti2Elem(conn(iel,i)-1,0),1)),iel);
-            Kokkos::atomic_increment(&vfield(conn(iel,i)-1));
+            int vtx = conn(iel,i);
+            int index =  Kokkos::atomic_add_fetch(&verti2Elem(vtx-1,0),1);
+            verti2Elem(vtx-1,index) = iel;
+            //Kokkos::atomic_store(&verti2Elem(vtx-1,index),iel);
+            //Kokkos::atomic_store(&verti2Elem(conn(iel,i)-1,Kokkos::atomic_add_fetch(&verti2Elem(conn(iel,i)-1,0),1)),iel);
         }
-        //Kokkos::atomic_store(&nodes2Elem(),conn(iel,0)); 
     });
 
-    //auto xp = partObj.getParticlePostions();
     Kokkos::parallel_for("V2Echeck",Nnp, KOKKOS_LAMBDA(const int i){
-        //for(int j = 0;j<= verti2Elem(i,0);j++){
-        //    printf("verti2Elem(%d,%d):%d\n", i,j, verti2Elem(i,j));
-        //}
-        printf("%d:(%d==%d) %d %d %d %d %d %d %d %d\n",i, vfield(i), verti2Elem(i,0),verti2Elem(i,1),verti2Elem(i,2),verti2Elem(i,3),verti2Elem(i,4),verti2Elem(i,5),verti2Elem(i,6),verti2Elem(i,7),verti2Elem(i,8));
+        printf("%d:(%d) %d %d %d %d %d %d %d %d\n",i, verti2Elem(i,0),verti2Elem(i,1),verti2Elem(i,2),verti2Elem(i,3),verti2Elem(i,4),verti2Elem(i,5),verti2Elem(i,6),verti2Elem(i,7),verti2Elem(i,8));
     });
 //*/
 }
