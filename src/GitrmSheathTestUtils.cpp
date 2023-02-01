@@ -183,8 +183,8 @@ Particles initializeTestParticles(Mesh meshObj){
         ipart += numParticlesPerElement(i); 
     },numPart);
     //printf("numPart: %d,Nel*6: %d\n",numPart,Nel*6);
-    //Kokkos::parallel_for("test", numPart, KOKKOS_LAMBDA(const int i){
-    //   printf("%d:(%d)\n",i,particleToElement(i));
+    //Kokkos::parallel_for("testForE2P", Nel*(maxParts+1), KOKKOS_LAMBDA(const int i){
+    //   printf("%d:(%d)\n",i,elem2Particles(i));
     //});
     Vector2View positions("particle-positions",numPart);
     IntView elementIDs("particle-elementIDs",numPart);
@@ -216,30 +216,32 @@ void assembly(Mesh meshObj, Particles partObj){
     int Nnp = meshObj.getTotalNodes();
 
     int numParti = partObj.getTotalParticles();
-    auto eID = partObj.getParticleElementIDs();   
- 
+    //auto eID = partObj.getParticleElementIDs();   
+    
     auto nodes = meshObj.getNodesVector();
     auto conn = meshObj.getConnectivity();
     //numElemsPerNode
-/*
-    Int4View elemToParti("elementToParticles",Nel);
+///*
+    Int4View verti2Elem("nodesToElement",Nnp);
+    
+    IntView vfield("vField",Nnp);
 
-    Kokkos::parallel_for("elementToParticle_assem",numParti, KOKKOS_LAMBDA(const int ipart){
-        int iel = eID(ipart);   
-        
-        Kokkos::atomic_store(&elemToParti(iel,++elemToParti(iel,0)),ipart);
-        Kokkos::atomic_increment(&elemToParti(iel,0));
-        printf("ETP(%d)[%d]:%d\n",iel,elemToParti(iel,0),ipart);
+    Kokkos::parallel_for("vertiToParticle_assem",Nel, KOKKOS_LAMBDA(const int iel){
+        int numEverts = conn(iel,0);
+        for(int i = 1; i<=numEverts; i++){
+            //v2E[conn(iel,i)-1][aaf(v2E[conn(iel,i)-1][0])] = i // the i need to -1 when using
+            Kokkos::atomic_store(&verti2Elem(conn(iel,i)-1,Kokkos::atomic_add_fetch(&verti2Elem(conn(iel,i)-1,0),1)),i);
+            Kokkos::atomic_increment(&vfield(conn(iel,i)-1));
+        }
+        //Kokkos::atomic_store(&nodes2Elem(),conn(iel,0)); 
     });
 
-    auto xp = partObj.getParticlePostions();
-    Kokkos::parallel_for("ETPcheck",Nel, KOKKOS_LAMBDA(const int iel){
-        int elSize = elemToParti(iel,0);
-        //printf("\nelement ID: %d,size: %d, ", iel, elSize);
-        for(int i=1; i<= elSize; i++){
-            int ipart = elemToParti(iel,i);
-            printf("%d,%d,(%d): (%.3f,%.3f) \n",iel,ipart,i,xp(ipart)[0],xp(ipart)[1]);
-        }
+    //auto xp = partObj.getParticlePostions();
+    Kokkos::parallel_for("V2Echeck",Nnp, KOKKOS_LAMBDA(const int i){
+        //for(int j = 0;j<= verti2Elem(i,0);j++){
+        //    printf("verti2Elem(%d,%d):%d\n", i,j, verti2Elem(i,j));
+        //}
+        printf("%d:(%d) %d %d %d %d %d %d %d %d %d\n",i, vfield(i), verti2Elem(i,0),verti2Elem(i,1),verti2Elem(i,2),verti2Elem(i,3),verti2Elem(i,4),verti2Elem(i,5),verti2Elem(i,6),verti2Elem(i,7),verti2Elem(i,8));
     });
 //*/
 }

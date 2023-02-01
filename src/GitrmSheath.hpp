@@ -26,6 +26,7 @@ namespace sheath {
 
 #define maxVerti 8
 #define maxParts 8
+#define maxElemsPerVert 6
 
 using Vector2View = Kokkos::View<Vector2*>;
 using Int4View = Kokkos::View<int*[maxVerti+1]>;
