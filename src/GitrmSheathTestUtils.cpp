@@ -208,10 +208,12 @@ Particles initializeTestParticles(Mesh meshObj){
     //});
     //Mesh temp(1,1,nodes,offset_conn,meshObj.getElemFaceBdry(),Nel,Nnp,meshObj.getEfieldVector());
     meshObj.setElem2Particles(elem2Particles);
+    //printf("after set:%ld\n",meshObj.getElem2Particles().size());
     return Particles(numPart, meshObj, positions, elementIDs, status);    
 }
 
 void assembly(Mesh meshObj, Particles partObj){
+    meshObj = partObj.getMeshObj();
     int Nel = meshObj.getTotalElements();
     int Nnp = meshObj.getTotalNodes();
 
@@ -220,24 +222,35 @@ void assembly(Mesh meshObj, Particles partObj){
     
     auto nodes = meshObj.getNodesVector();
     auto conn = meshObj.getConnectivity();
-///*
-    Int4View verti2Elem("verticesToElement",Nnp);
+    auto elem2Particles = meshObj.getElem2Particles();
+    auto xp = partObj.getParticlePostions();
+
+    DoubleView vField("vField",Nnp);
     
-    Kokkos::parallel_for("vertiToParticle_assem",Nel, KOKKOS_LAMBDA(const int iel){
-        int numEverts = conn(iel,0);
-        for(int i = 1; i<=numEverts; i++){
-            int vtx = conn(iel,i);
-            int index =  Kokkos::atomic_add_fetch(&verti2Elem(vtx-1,0),1);
-            verti2Elem(vtx-1,index) = iel;
-            //Kokkos::atomic_store(&verti2Elem(vtx-1,index),iel);
-            //Kokkos::atomic_store(&verti2Elem(conn(iel,i)-1,Kokkos::atomic_add_fetch(&verti2Elem(conn(iel,i)-1,0),1)),iel);
+    Kokkos::parallel_for("vertex_assem",Nel, KOKKOS_LAMBDA(const int iel){
+        int nVertsE = conn(iel,0);
+        int nParticles = elem2Particles(iel*(maxParts+1)); 
+        for(int i=0; i<nVertsE; i++){
+            int vID = conn(iel,i+1)-1;
+            auto vertex = nodes(vID);
+            //atomic_increment(&vfield(vID));
+            //calc the sum distance to the vertex to the particles
+            for(int j=0; j<nParticles; j++){
+                int partID = elem2Particles(iel*(maxParts+1)+j+1);
+                Kokkos::atomic_add(&vField(vID),(xp(partID) - vertex).magnitude());
+            }
+            //printf("%d\n",/*iel,vID,*/nParticles);
+            //add the sum up;
+            //Kokkos::atomic_add(&vField(vID),1);
         }
     });
 
-    Kokkos::parallel_for("V2Echeck",Nnp, KOKKOS_LAMBDA(const int i){
-        printf("%d:(%d) %d %d %d %d %d %d %d %d\n",i, verti2Elem(i,0),verti2Elem(i,1),verti2Elem(i,2),verti2Elem(i,3),verti2Elem(i,4),verti2Elem(i,5),verti2Elem(i,6),verti2Elem(i,7),verti2Elem(i,8));
+
+    Kokkos::parallel_for("vFieldcheck",Nnp, KOKKOS_LAMBDA(const int i){
+        printf("%.3e\n",vField(i));
     });
 //*/
+
 }
 
 

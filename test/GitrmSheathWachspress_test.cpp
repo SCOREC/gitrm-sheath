@@ -15,7 +15,7 @@ int main( int argc, char* argv[] ) {
         //part.interpolateWachpress();	
         //part.interpolateWachpress();	
         //part.interpolateWachpress();	
-        //part.interpolateWachpress();	
+        //part.interpolateWachpress();
         assembly(mesh,part);
         //}
     }
