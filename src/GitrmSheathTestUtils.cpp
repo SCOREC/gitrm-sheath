@@ -229,25 +229,40 @@ void assembly(Mesh meshObj, Particles partObj){
     
     Kokkos::parallel_for("vertex_assem",Nel, KOKKOS_LAMBDA(const int iel){
         int nVertsE = conn(iel,0);
-        int nParticles = elem2Particles(iel*(maxParts+1)); 
+        int nParticlesE = elem2Particles(iel*(maxParts+1)); 
         for(int i=0; i<nVertsE; i++){
             int vID = conn(iel,i+1)-1;
-            auto vertex = nodes(vID);
+            auto vertexLoc = nodes(vID);
             //atomic_increment(&vfield(vID));
             //calc the sum distance to the vertex to the particles
-            for(int j=0; j<nParticles; j++){
+            for(int j=0; j<nParticlesE; j++){
                 int partID = elem2Particles(iel*(maxParts+1)+j+1);
-                Kokkos::atomic_add(&vField(vID),(xp(partID) - vertex).magnitude());
+                double distance = (xp(partID)-vertexLoc).magnitude();
+                Kokkos::atomic_add(&vField(vID),distance);
             }
             //printf("%d\n",/*iel,vID,*/nParticles);
             //add the sum up;
             //Kokkos::atomic_add(&vField(vID),1);
         }
     });
-
-
+    //ptcl
+    auto eID = partObj.getParticleElementIDs();
+    DoubleView vField2("vField2",Nnp);
+    Kokkos::parallel_for("vertex_assem2", numParti, KOKKOS_LAMBDA(const int ipart){
+        int iel = eID(ipart); 
+        int nVertsE = conn(iel,0);
+        for(int i=0; i<nVertsE; i++){
+            int vID = conn(iel,i+1)-1;
+            auto vertexLoc = nodes(vID);
+            //atomic_increment(&vfield(vID));
+            //calc the sum distance to the vertex to the particles
+            double distance = (xp(ipart)-vertexLoc).magnitude();
+            Kokkos::atomic_add(&vField2(vID),distance);
+        }
+    });
+    
     Kokkos::parallel_for("vFieldcheck",Nnp, KOKKOS_LAMBDA(const int i){
-        printf("%.3e\n",vField(i));
+        printf("%.3e, %.3e\n",vField(i),vField2(i));
     });
 //*/
 
