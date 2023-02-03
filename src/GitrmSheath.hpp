@@ -26,10 +26,11 @@ namespace sheath {
 
 #define maxVerti 8
 #define maxParts 8
-#define maxElemsPerVert 6
+#define maxElemsPerVert 5
 
 using Vector2View = Kokkos::View<Vector2*>;
 using Int4View = Kokkos::View<int*[maxVerti+1]>;
+using IntElemsPerVertView = Kokkos::View<int*[maxElemsPerVert+1]>;
 using DoubleView = Kokkos::View<double*>;
 using IntView = Kokkos::View<int*>;
 using BoolView = Kokkos::View<bool*>;
@@ -54,6 +55,7 @@ private:
     Vector2View Efield_;
     
     IntView elem2Particles_;
+    IntElemsPerVertView vertex2Elems_;
 public:
     Mesh(){};
 
@@ -92,6 +94,28 @@ public:
          nnpTotal_(nnpTotal),
          Efield_(Efield),
          elem2Particles_(elem2Particles){};
+    
+    Mesh(int Nel_x,
+         int Nel_y,
+         Vector2View nodes,
+         Int4View conn,
+         Int4View elemFaceBdry,
+         int nelTotal,
+         int nnpTotal,
+         Vector2View Efield,
+         IntView elem2Particles,
+         IntElemsPerVertView vertex2Elems):
+         Nel_x_(Nel_x),
+         Nel_y_(Nel_y),
+         nodes_(nodes),
+         conn_(conn),
+         elemFaceBdry_(elemFaceBdry),
+         nelTotal_(nelTotal),
+         nnpTotal_(nnpTotal),
+         Efield_(Efield),
+         elem2Particles_(elem2Particles),
+         vertex2Elems_(vertex2Elems){};
+
 
     int getTotalNodes();
     int getTotalElements();
@@ -104,8 +128,11 @@ public:
     void computeFractionalElementArea();
     double getTotalArea();
     DoubleView getFractionalElementAreas();
+    
     IntView getElem2Particles();
+    IntElemsPerVertView getVertex2Elems();
     void setElem2Particles(IntView elem2Particles);
+    void setVertex2Elems(IntElemsPerVertView vertex2Elems);
 };
 
 Mesh initializeSheathMesh(int Nel_x,

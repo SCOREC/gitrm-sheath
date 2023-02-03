@@ -38,9 +38,18 @@ IntView Mesh::getElem2Particles(){
     return elem2Particles_;
 }
 
+IntElemsPerVertView Mesh::getVertex2Elems(){
+    return vertex2Elems_;
+}
+
 void Mesh::setElem2Particles(IntView elem2Particles){
     elem2Particles_ = IntView("elementToParticles",elem2Particles.size());
     Kokkos::deep_copy(elem2Particles_, elem2Particles);
+}
+
+void Mesh::setVertex2Elems(IntElemsPerVertView vertex2Elems){
+    vertex2Elems_ = IntElemsPerVertView("vertexToElements",vertex2Elems.size());
+    Kokkos::deep_copy(vertex2Elems_,vertex2Elems);
 }
 
 Mesh initializeSimpleMesh(){
@@ -99,14 +108,23 @@ Mesh initializeTestMesh(int factor){
     {7,8,15,-1,-1,-1,-1,-1},{6,7,15,17,16,-1,-1,-1},
     {14,10,11,12,13,19,18,-1}};
     int node_array[10] = {8,3,5,3,3,4,6,3,5,7};
+    int vertex2Elems_array[19][6] = {{1,0,0,0,0,0},{2,0,1,0,0,0},{4,1,2,3,4,0},{3,0,1,2,0,0},{3,0,2,5,0,0},{2,0,8,0,0,0},{3,0,7,8,0,0},{3,0,6,7,0,0},{3,0,5,6,0,0},{3,2,5,9,0,0},{3,2,3,9,0,0},{3,3,4,9,0,0},{2,4,9,0,0,0},{3,5,6,9,0,0},{3,6,7,8,0,0},{1,8,0,0,0,0},{2,6,8,0,0,0},{2,6,9,0,0,0},{1,9,0,0,0,0}};
+    
     Vector2View node("node-coord-vector", Nnp);
+    IntElemsPerVertView vertex2Elems("vertexToElements",Nnp);
+    
     Vector2View::HostMirror h_node = Kokkos::create_mirror_view(node);
+    IntElemsPerVertView::HostMirror h_vertex2Elems = Kokkos::create_mirror_view(vertex2Elems);
     for(int j=0; j<factor; j++){
         for(int i=0; i<Nnp_size; i++){
             h_node(i+j*Nnp_size) = Vector2(v_array[i][0],v_array[i][1]); 
+            for(int k=0; k<vertex2Elems_array[i][0]; k++){
+                h_vertex2Elems(i+j*Nnp_size,k) = vertex2Elems_array[i][k];
+            }
         }
     }
     Kokkos::deep_copy(node, h_node);
+    Kokkos::deep_copy(vertex2Elems,h_vertex2Elems);
 
     Vector2View Efield("Efield-vector",Nnp); 
     Int4View conn("elem-connectivty",Nel);
