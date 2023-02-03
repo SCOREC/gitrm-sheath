@@ -212,18 +212,18 @@ Particles initializeTestParticles(Mesh meshObj){
     return Particles(numPart, meshObj, positions, elementIDs, status);    
 }
 
-void assembly(Mesh meshObj, Particles partObj){
-    meshObj = partObj.getMeshObj();
+void assembly(Mesh meshObj, Particles ptclObj){
+    meshObj = ptclObj.getMeshObj();
     int Nel = meshObj.getTotalElements();
     int Nnp = meshObj.getTotalNodes();
 
-    int numParti = partObj.getTotalParticles();
+    int numParti = ptclObj.getTotalParticles();
     //auto eID = partObj.getParticleElementIDs();   
     
     auto nodes = meshObj.getNodesVector();
     auto conn = meshObj.getConnectivity();
     auto elem2Particles = meshObj.getElem2Particles();
-    auto xp = partObj.getParticlePostions();
+    auto xp = ptclObj.getParticlePostions();
 
     DoubleView vField("vField",Nnp);
     
@@ -246,7 +246,7 @@ void assembly(Mesh meshObj, Particles partObj){
         }
     });
     //ptcl
-    auto eID = partObj.getParticleElementIDs();
+    auto eID = ptclObj.getParticleElementIDs();
     DoubleView vField2("vField2",Nnp);
     Kokkos::parallel_for("vertex_assem2", numParti, KOKKOS_LAMBDA(const int ipart){
         int iel = eID(ipart); 
@@ -261,9 +261,9 @@ void assembly(Mesh meshObj, Particles partObj){
         }
     });
     
-    Kokkos::parallel_for("vFieldcheck",Nnp, KOKKOS_LAMBDA(const int i){
-        printf("%.3e, %.3e\n",vField(i),vField2(i));
-    });
+    //Kokkos::parallel_for("vFieldcheck",Nnp, KOKKOS_LAMBDA(const int i){
+    //    printf("%.3e, %.3e\n",vField(i),vField2(i));
+    //});
 //*/
 
 }

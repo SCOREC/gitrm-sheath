@@ -66,45 +66,9 @@ public:
          Int4View elemFaceBdry,
          int nelTotal,
          int nnpTotal,
-         Vector2View Efield):
-         Nel_x_(Nel_x),
-         Nel_y_(Nel_y),
-         nodes_(nodes),
-         conn_(conn),
-         elemFaceBdry_(elemFaceBdry),
-         nelTotal_(nelTotal),
-         nnpTotal_(nnpTotal),
-         Efield_(Efield){};
-
-    Mesh(int Nel_x,
-         int Nel_y,
-         Vector2View nodes,
-         Int4View conn,
-         Int4View elemFaceBdry,
-         int nelTotal,
-         int nnpTotal,
          Vector2View Efield,
-         IntView elem2Particles):
-         Nel_x_(Nel_x),
-         Nel_y_(Nel_y),
-         nodes_(nodes),
-         conn_(conn),
-         elemFaceBdry_(elemFaceBdry),
-         nelTotal_(nelTotal),
-         nnpTotal_(nnpTotal),
-         Efield_(Efield),
-         elem2Particles_(elem2Particles){};
-    
-    Mesh(int Nel_x,
-         int Nel_y,
-         Vector2View nodes,
-         Int4View conn,
-         Int4View elemFaceBdry,
-         int nelTotal,
-         int nnpTotal,
-         Vector2View Efield,
-         IntView elem2Particles,
-         IntElemsPerVertView vertex2Elems):
+         IntView elem2Particles = IntView("notInitElem2Particles",0),
+         IntElemsPerVertView vertex2Elems = IntElemsPerVertView("notInitVertex2Elems",0)):
          Nel_x_(Nel_x),
          Nel_y_(Nel_y),
          nodes_(nodes),

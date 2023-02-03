@@ -118,7 +118,7 @@ Mesh initializeTestMesh(int factor){
     for(int j=0; j<factor; j++){
         for(int i=0; i<Nnp_size; i++){
             h_node(i+j*Nnp_size) = Vector2(v_array[i][0],v_array[i][1]); 
-            for(int k=0; k<vertex2Elems_array[i][0]; k++){
+            for(int k=0; k<=vertex2Elems_array[i][0]; k++){
                 h_vertex2Elems(i+j*Nnp_size,k) = vertex2Elems_array[i][k];
             }
         }
@@ -140,8 +140,9 @@ Mesh initializeTestMesh(int factor){
         }
     }
     Kokkos::deep_copy(conn, h_conn);
-
-    return Mesh(1,1,node,conn,elemFaceBdry,Nel,Nnp,Efield);   
+    
+    IntView elem2Particles("notInitElem2Particles",0);
+    return Mesh(1,1,node,conn,elemFaceBdry,Nel,Nnp,Efield,elem2Particles,vertex2Elems);   
 }
 
 Mesh initializeSheathMesh(int Nel_x,
