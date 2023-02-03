@@ -747,7 +747,7 @@ void Particles::interpolateWachpress(){
 
     //100 1000 10000 100000 1000000 |(mem out)10000000
     //numParticles = 100;
-    Kokkos::parallel_for("Efield-2-particles factor(1000000)",numParticles,KOKKOS_LAMBDA(const int ipart){
+    Kokkos::parallel_for("Efield-2-particles",numParticles,KOKKOS_LAMBDA(const int ipart){
         if (status(ipart)){
             int iel = eID(ipart);
             //Vector2 wp_coord(0,0);
@@ -767,12 +767,13 @@ void Particles::interpolateWachpress(){
             //        v[i] = v[numEverts];
             //    }
             //}
- 
+             
             double wByArea[maxVerti] = {0.0};
             //printf("test%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",wByArea[0],wByArea[1],wByArea[2],wByArea[3],wByArea[4],wByArea[5],wByArea[6],wByArea[7]);
             //std::array<double,maxVerti> wByArea;
             initArrayWith(wByArea,maxVerti,0.0);
             getWachpressCoeffsByArea(xp(ipart), numEverts, v, wByArea);
+            gradient(xp(ipart), numEverts, v);
             Vector2 wp_coordByArea(0,0);
             for(int i = 0; i<maxVerti; i++){
 	      //  wp_coord = wp_coord + v[i]*w[i]; 

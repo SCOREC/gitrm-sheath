@@ -108,24 +108,33 @@ Mesh initializeTestMesh(int factor){
     {7,8,15,-1,-1,-1,-1,-1},{6,7,15,17,16,-1,-1,-1},
     {14,10,11,12,13,19,18,-1}};
     int node_array[10] = {8,3,5,3,3,4,6,3,5,7};
-    int vertex2Elems_array[19][6] = {{1,0,0,0,0,0},{2,0,1,0,0,0},{4,1,2,3,4,0},{3,0,1,2,0,0},{3,0,2,5,0,0},{2,0,8,0,0,0},{3,0,7,8,0,0},{3,0,6,7,0,0},{3,0,5,6,0,0},{3,2,5,9,0,0},{3,2,3,9,0,0},{3,3,4,9,0,0},{2,4,9,0,0,0},{3,5,6,9,0,0},{3,6,7,8,0,0},{1,8,0,0,0,0},{2,6,8,0,0,0},{2,6,9,0,0,0},{1,9,0,0,0,0}};
+    int vertex2Elems_array[19][6] = {{1,0,-1,-1,-1,-1},{2,0,1,-1,-1,-1},{4,1,2,3,4,-1},{3,0,1,2,-1,-1},{3,0,2,5,-1,-1},{2,0,8,-1,-1,-1},{3,0,7,8,-1,-1},{3,0,6,7,-1,-1},{3,0,5,6,-1,-1},{3,2,5,9,-1,-1},{3,2,3,9,-1,-1},{3,3,4,9,-1,-1},{2,4,9,-1,-1,-1},{3,5,6,9,-1,-1},{3,6,7,8,-1,-1},{1,8,-1,-1,-1,-1},{2,6,8,-1,-1,-1},{2,6,9,-1,-1,-1},{1,9,-1,-1,-1,-1}};
     
     Vector2View node("node-coord-vector", Nnp);
     IntElemsPerVertView vertex2Elems("vertexToElements",Nnp);
     
     Vector2View::HostMirror h_node = Kokkos::create_mirror_view(node);
     IntElemsPerVertView::HostMirror h_vertex2Elems = Kokkos::create_mirror_view(vertex2Elems);
-    for(int j=0; j<factor; j++){
+    for(int f=0; f<factor; f++){
         for(int i=0; i<Nnp_size; i++){
-            h_node(i+j*Nnp_size) = Vector2(v_array[i][0],v_array[i][1]); 
-            for(int k=0; k<=vertex2Elems_array[i][0]; k++){
-                h_vertex2Elems(i+j*Nnp_size,k) = vertex2Elems_array[i][k];
+            h_node(i+f*Nnp_size) = Vector2(v_array[i][0],v_array[i][1]); 
+            h_vertex2Elems(i+f*Nnp_size,0) = vertex2Elems_array[i][0];
+            for(int j=1; j<=vertex2Elems_array[i][0]; j++){
+                //double check
+                h_vertex2Elems(i+f*Nnp_size,j) = vertex2Elems_array[i][j]+f*Nel_size; 
             }
         }
     }
     Kokkos::deep_copy(node, h_node);
     Kokkos::deep_copy(vertex2Elems,h_vertex2Elems);
-
+    /*
+    for(int i=0; i<Nnp; i++){
+        printf("%d: ",i);
+        for(int j=0;j<=h_vertex2Elems(i,0);j++){
+            printf("%d ",h_vertex2Elems(i,j));   
+        }
+        printf("\n");
+    }*/
     Vector2View Efield("Efield-vector",Nnp); 
     Int4View conn("elem-connectivty",Nel);
     Int4View elemFaceBdry("elem-face-boundary",Nel);
