@@ -21,6 +21,9 @@ endmacro(gitrmsheath_export_lib)
 set(CMAKE_CXX_EXTENSIONS Off)
 find_package(Kokkos REQUIRED)
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(NetCDF REQUIRED IMPORTED_TARGET netcdf>=4.7.3)
+
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
