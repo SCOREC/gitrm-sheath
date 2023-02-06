@@ -369,30 +369,42 @@ void getWachpressCoeffsByArea(Vector2 xp,
 }
 
 KOKKOS_INLINE_FUNCTION
-void gradient(Vector2 xp, int numVerti, Vector2* v){
+void gradient(Vector2 xp, int numVerti, Vector2* v, double* l){
     Vector2 e[maxVerti+1];
-    Vector2 p[maxVerti];
-    //double w[maxVerti];
+    Vector2 p[maxVerti+1];
+    double w[maxVerti];
     for(int i = 0; i<numVerti; i++){
         e[i+1] = v[i+1] -v[i];
-        p[i] = v[i] - xp;
+        p[i+1] = v[i+1] - xp;
     }
     e[0] = e[numVerti];
+    p[0] = p[numVerti];
     
-    double h[maxVerti];   
-    Vector2 n[maxVerti];
+    double h[maxVerti+1];   
+    Vector2 n[maxVerti+1];
     
-    for(int i=0; i<numVerti; i++){
-        Vector2 a = v[i];
-        Vector2 b = v[i+1];
-        double absA = sqrt(a[0]*a[0]+a[1]*a[1]);
-        double absB = sqrt(b[0]*b[0]+b[1]*b[1]);
-        double absAB = v[i].dot(v[i+1]);
-        n[i] = a.cross(b)/sqrt(absA*absA*absB*absB-absAB*absAB);
+    for(int i=0; i<numVerti+1; i++){
+        n[i][0] = -e[i][1];
+        n[i][1] = e[i][0];
         h[i] = p[i].dot(n[i]);
-        printf("n[%d]= (%.3e,%.3e)| h[%d]= %.3e\n",i,n[i][0],n[i][1],i,h[i]);
+        //printf("e[%d]= (%.3f,%.3f)\t| n[%d]= (%.3f,%.3f)\t| h[%d]= %.3f\n",i,e[i+1][0],e[i+1][1],i,n[i][0],n[i][1],i,h[i]);
+    }
+
+    double wSum = 0.0;
+    for(int i=0; i<numVerti; i++){
+        w[i] = n[i].cross(n[i+1])/(h[i]*h[i+1]);
+        wSum += w[i];
+        //printf("w[%d]= %.3f\n",i,w[i]);
+    }   
+
+    for(int i = 0; i<numVerti; i++){
+        l[i] = w[i]/wSum;
+        //if(numVerti == 3){
+        //    printf("w[%d],wSum = %.3f, %.3f \n",i, w[i], wSum);
+        //}
     }
 }
+
 KOKKOS_INLINE_FUNCTION
 void getTriangleBC(Vector2 xp, Vector2 v1,
                     Vector2 v2, Vector2 v3,
