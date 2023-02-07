@@ -372,7 +372,6 @@ KOKKOS_INLINE_FUNCTION
 void gradient(Vector2 xp, int numVerti, Vector2* v, double* l){
     Vector2 e[maxVerti+1];
     Vector2 p[maxVerti+1];
-    double w[maxVerti];
     for(int i = 0; i<numVerti; i++){
         e[i+1] = v[i+1] -v[i];
         p[i+1] = v[i+1] - xp;
@@ -384,12 +383,15 @@ void gradient(Vector2 xp, int numVerti, Vector2* v, double* l){
     Vector2 n[maxVerti+1];
     
     for(int i=0; i<numVerti+1; i++){
-        n[i][0] = -e[i][1];
-        n[i][1] = e[i][0];
+        n[i][0] = e[i][1];
+        n[i][1] = -e[i][0];
+        //timing ?
         h[i] = p[i].dot(n[i]);
-        //printf("e[%d]= (%.3f,%.3f)\t| n[%d]= (%.3f,%.3f)\t| h[%d]= %.3f\n",i,e[i+1][0],e[i+1][1],i,n[i][0],n[i][1],i,h[i]);
+        //check cross product of n.cross(e) positive
+        //printf("%d: n.cross(e)= %.3f\n",i,n[i].cross(e[i]));
     }
 
+    double w[maxVerti];
     double wSum = 0.0;
     for(int i=0; i<numVerti; i++){
         w[i] = n[i].cross(n[i+1])/(h[i]*h[i+1]);
@@ -402,6 +404,15 @@ void gradient(Vector2 xp, int numVerti, Vector2* v, double* l){
         //if(numVerti == 3){
         //    printf("w[%d],wSum = %.3f, %.3f \n",i, w[i], wSum);
         //}
+    }
+    
+    //finish the gradient calc
+    Vector2 gradientW[maxVerti];
+    Vector2 ratio[maxVerti];
+    for(int i=0;i<numVerti;i++){
+        gradientW[i] = Vector2(w[i]*(n[i][0]/h[i]+n[i+1][0]/h[i+1]),w[i]*(n[i][1]/h[i]+n[i+1][1]/h[i+1]));
+        ratio[i] = Vector2(gradientW[i][0]/w[i],gradientW[i][1]);
+        printf("gradientW[%d]= (%1.3e,%1.3e)\t| ratio[%d]= (%1.3e,%1.3e)\n",i,gradientW[i][0],gradientW[i][1],i,ratio[i][0],ratio[i][1]);
     }
 }
 

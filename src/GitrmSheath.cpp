@@ -120,7 +120,6 @@ Mesh initializeTestMesh(int factor){
             h_node(i+f*Nnp_size) = Vector2(v_array[i][0],v_array[i][1]); 
             h_vertex2Elems(i+f*Nnp_size,0) = vertex2Elems_array[i][0];
             for(int j=1; j<=vertex2Elems_array[i][0]; j++){
-                //double check
                 h_vertex2Elems(i+f*Nnp_size,j) = vertex2Elems_array[i][j]+f*Nel_size; 
             }
         }
@@ -128,13 +127,15 @@ Mesh initializeTestMesh(int factor){
     Kokkos::deep_copy(node, h_node);
     Kokkos::deep_copy(vertex2Elems,h_vertex2Elems);
     /*
-    for(int i=0; i<Nnp; i++){
+    //print the 13th(last) unit and check
+    for(int i=Nnp_size*(factor-1); i<Nnp; i++){
         printf("%d: ",i);
         for(int j=0;j<=h_vertex2Elems(i,0);j++){
             printf("%d ",h_vertex2Elems(i,j));   
         }
         printf("\n");
-    }*/
+    }
+    //*/
     Vector2View Efield("Efield-vector",Nnp); 
     Int4View conn("elem-connectivty",Nel);
     Int4View elemFaceBdry("elem-face-boundary",Nel);

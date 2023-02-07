@@ -786,7 +786,7 @@ void Particles::interpolateWachpress(){
             }   
             
             //if(iel%11 == 0){
-            printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e) wpByArea:(%1.3e,%1.3e) wpByGradient:(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coordByArea[0],wp_coordByArea[1],wp_coordByGradient[0],wp_coordByGradient[1]);
+            //printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e) wpByArea:(%1.3e,%1.3e) wpByGradient:(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coordByArea[0],wp_coordByArea[1],wp_coordByGradient[0],wp_coordByGradient[1]);
             //}
 
         }
