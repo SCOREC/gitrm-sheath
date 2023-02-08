@@ -7,6 +7,7 @@
 #ifndef GitrmSheath_hpp
 #define GitrmSheath_hpp
 
+#include <stdlib.h>
 #include <iostream>
 #include <limits>
 #include <cstdio>

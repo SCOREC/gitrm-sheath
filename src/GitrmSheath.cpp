@@ -1,4 +1,5 @@
 #include "GitrmSheath.hpp"
+#include <netcdf.h>
 
 namespace sheath {
 
@@ -154,8 +155,8 @@ Mesh initializeTestMesh(int factor){
     IntView elem2Particles("notInitElem2Particles",0);
     return Mesh(1,1,node,conn,elemFaceBdry,Nel,Nnp,Efield,elem2Particles,vertex2Elems);   
 }
-
-Mesh readMPASMesh(int& ncid){
+Mesh readMPASMesh(int ncid){
+///*
     int retval,
         nCells, nCellsID,
         nVertices, nVerticesID,
@@ -236,6 +237,7 @@ Mesh readMPASMesh(int& ncid){
         delete [] cellsOnVertex[i];
     delete [] cellsOnVertex;
 
+//*/
 
     return Mesh();
 }
