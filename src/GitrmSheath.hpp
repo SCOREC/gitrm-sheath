@@ -22,6 +22,8 @@
 
 #include "GitrmSheathUtils.hpp"
 
+#define ERRexit(e) {printf("Error: %s\n", nc_strerror(e)); exit(2);}
+
 namespace sheath {
 
 #define maxVerti 8
@@ -107,6 +109,8 @@ Mesh initializeSheathMesh(int Nel_x,
 Mesh initializeSimpleMesh();
 
 Mesh initializeTestMesh(int factor);
+
+Mesh readMPASMesh(&int ncid);
 
 KOKKOS_INLINE_FUNCTION
 bool P2LCheck(Vector2 xp, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){

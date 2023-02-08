@@ -153,6 +153,83 @@ Mesh initializeTestMesh(int factor){
     
     IntView elem2Particles("notInitElem2Particles",0);
     return Mesh(1,1,node,conn,elemFaceBdry,Nel,Nnp,Efield,elem2Particles,vertex2Elems);   
+
+Mesh readMPASMesh(int& ncid){
+    int retval,
+        nCells, nCellsID,
+        nVertices, nVerticesID,
+        maxEdges, maxEdgesID;
+    size_t temp;
+
+    int xVertexID, yVertexID, zVertexID, verticesOnCellID, cellsOnVertexID;
+    double* xVertex, yVertex, zVertex; //nVertices
+    int** verticesOnCell;     //[maxEdges,nCells]
+    double** cellsOnVertex;   //[3,nVertices]
+    if ((retval = nc_inq_dimid(ncid, "nCells", &nCellsID)))
+        ERRexit(retval);
+    if ((retval = nc_inq_dimid(ncid, "nVertices", &nVerticesID)))
+        ERRexit(retval);
+    if ((retval = nc_inq_dimid(ncid, "maxEdges", &maxEdgesID)))
+        ERRexit(retval);
+    
+    
+    if ((retval = nc_inq_dimlen(ncid, nCellsID, &temp)))
+        ERRexit(retval);
+    nCells = temp;
+    if ((retval = nc_inq_dimlen(ncid, nVerticesID, &temp)))
+        ERRexit(retval);
+    nVertices = temp;
+    if ((retval = nc_inq_dimlen(ncid, maxEdgesID, &temp)))
+        ERRexit(retval);
+    maxEdges = temp;
+
+    
+    if ((retval = nc_inq_varid(ncid, "xVertex", &xVertexID)))
+        ERRexit(retval);
+    if ((retval = nc_inq_varid(ncid, "yVertex", &yVertexID)))
+        ERRexit(retval);
+    if ((retval = nc_inq_varid(ncid, "zVertex", &zVertexID)))
+        ERRexit(retval);
+    if ((retval = nc_inq_varid(ncid, "verticesOnCell", &verticesOnCellID)))
+        ERRexit(retval);
+    if ((retval = nc_inq_varid(ncid, "celsOnVertex", &cellsOnVertexID)))
+        ERRexit(retval);
+
+    xVertex = new double[nVertices];
+    yVertex = new double[nVertices];
+    zVertex = new double[nVertices];
+    verticesOnCell = new int*[maxEdges];
+    for(int i=0; i<maxEdges; i++)
+        verticesOnCell[i] = new int[nCells];
+    cellsOnVertex = new double*[3]; //vertex dimension is 3
+    for(int i=0; i<3; i++)
+        cellsOnVertex = new double[];
+
+    
+    if ((retval = nc_get_var(ncid, xVertexID, &xVertex)))
+        ERRexit(retval);
+    if ((retval = nc_get_var(ncid, yVertexID, &yVertex)))
+        ERRexit(retval);
+    if ((retval = nc_get_var(ncid, zVertexID, &zVertex)))
+        ERRexit(retval);
+    if ((retval = nc_get_var(ncid, xVertexID, &xVertex)))
+        ERRexit(retval);
+    if ((retval = nc_get_var(ncid, xVertexID, &xVertex)))
+        ERRexit(retval);
+    //delete dynamic allocation
+    delete [] xVertex;
+    delete [] yVertex;
+    delete [] zVertex;
+    for(int i=0; i<maxEdges; i++)
+        delete [] verticesOnCell[i];
+    delete [] verticesOnCell;
+    for(int i=0; i<3; i++)
+        delete [] cellsOnVertex[i];
+    delete [] cellsOnVertex;
+
+
+    
+    //Vector2View   
 }
 
 Mesh initializeSheathMesh(int Nel_x,
