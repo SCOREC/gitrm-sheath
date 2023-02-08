@@ -153,6 +153,7 @@ Mesh initializeTestMesh(int factor){
     
     IntView elem2Particles("notInitElem2Particles",0);
     return Mesh(1,1,node,conn,elemFaceBdry,Nel,Nnp,Efield,elem2Particles,vertex2Elems);   
+}
 
 Mesh readMPASMesh(int& ncid){
     int retval,
@@ -162,7 +163,9 @@ Mesh readMPASMesh(int& ncid){
     size_t temp;
 
     int xVertexID, yVertexID, zVertexID, verticesOnCellID, cellsOnVertexID;
-    double* xVertex, yVertex, zVertex; //nVertices
+    double* xVertex;
+    double* yVertex;
+    double* zVertex; //nVertices
     int** verticesOnCell;     //[maxEdges,nCells]
     double** cellsOnVertex;   //[3,nVertices]
     if ((retval = nc_inq_dimid(ncid, "nCells", &nCellsID)))
@@ -192,7 +195,7 @@ Mesh readMPASMesh(int& ncid){
         ERRexit(retval);
     if ((retval = nc_inq_varid(ncid, "verticesOnCell", &verticesOnCellID)))
         ERRexit(retval);
-    if ((retval = nc_inq_varid(ncid, "celsOnVertex", &cellsOnVertexID)))
+    if ((retval = nc_inq_varid(ncid, "cellsOnVertex", &cellsOnVertexID)))
         ERRexit(retval);
 
     xVertex = new double[nVertices];
@@ -203,7 +206,7 @@ Mesh readMPASMesh(int& ncid){
         verticesOnCell[i] = new int[nCells];
     cellsOnVertex = new double*[3]; //vertex dimension is 3
     for(int i=0; i<3; i++)
-        cellsOnVertex = new double[];
+        cellsOnVertex[i] = new double[nVertices];
 
     
     if ((retval = nc_get_var(ncid, xVertexID, &xVertex)))
@@ -212,10 +215,16 @@ Mesh readMPASMesh(int& ncid){
         ERRexit(retval);
     if ((retval = nc_get_var(ncid, zVertexID, &zVertex)))
         ERRexit(retval);
-    if ((retval = nc_get_var(ncid, xVertexID, &xVertex)))
+    if ((retval = nc_get_var(ncid, verticesOnCellID, &verticesOnCell)))
         ERRexit(retval);
-    if ((retval = nc_get_var(ncid, xVertexID, &xVertex)))
+    if ((retval = nc_get_var(ncid, cellsOnVertexID, &cellsOnVertex)))
         ERRexit(retval);
+
+
+    //TODO: put the value to the mesh
+    //Vector2View   
+    
+
     //delete dynamic allocation
     delete [] xVertex;
     delete [] yVertex;
@@ -228,8 +237,7 @@ Mesh readMPASMesh(int& ncid){
     delete [] cellsOnVertex;
 
 
-    
-    //Vector2View   
+    return Mesh();
 }
 
 Mesh initializeSheathMesh(int Nel_x,
