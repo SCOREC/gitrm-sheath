@@ -155,8 +155,8 @@ Mesh initializeTestMesh(int factor){
     IntView elem2Particles("notInitElem2Particles",0);
     return Mesh(1,1,node,conn,elemFaceBdry,Nel,Nnp,Efield,elem2Particles,vertex2Elems);   
 }
+
 Mesh readMPASMesh(int ncid){
-///*
     int retval,
         nCells, nCellsID,
         nVertices, nVerticesID,
@@ -177,6 +177,7 @@ Mesh readMPASMesh(int ncid){
         ERRexit(retval);
     
     
+///*
     if ((retval = nc_inq_dimlen(ncid, nCellsID, &temp)))
         ERRexit(retval);
     nCells = temp;
@@ -222,10 +223,43 @@ Mesh readMPASMesh(int ncid){
         ERRexit(retval);
 
 
-    //TODO: put the value to the mesh
-    //Vector2View   
+    //TODO: put the value into a mesh
+    //Nel = nCell     Nnp = nVertices  maxEdges need a new variable
+    //
+    Vector2View node("node-coord-vector", nVertices);
+    //IntElemsPerVertView vertex2Elems("vertexToElements",nVertices);
+    
+    Vector2View::HostMirror h_node = Kokkos::create_mirror_view(node);
+    //IntElemsPerVertView::HostMirror h_vertex2Elems = Kokkos::create_mirror_view(vertex2Elems);
+    for(int i=0; i<nVertices; i++){
+        h_node(i) = Vector2(xVertex[i],yVertex[i]); 
+        //h_vertex2Elems(i,0) = verticesOnCell[i][0];
+        //for(int j=0; j<=; j++){
+        //    h_vertex2Elems(i) = vertex2Elems_array[i][j]+f*Nel_size; 
+        //}
+    }
+    
+    Kokkos::deep_copy(node, h_node);
+    //Kokkos::deep_copy(vertex2Elems,h_vertex2Elems);
     
 
+    Vector2View Efield("Efield-vector",nVertices); 
+    Int4View conn("elem-connectivty",nCells);
+    Int4View elemFaceBdry("elem-face-boundary",nCells);
+
+    Int4View::HostMirror h_conn = Kokkos::create_mirror_view(conn);
+    
+    //for(int i=0; i<nCell; i++){
+    //    h_conn(i,0) = node_array[i];
+    //    for(int j=0; j<h_conn(i,0); j++){
+    //        h_conn(i+f*Nel_size,j+1) = conn_array[i][j] + f*Nnp_size;
+    //    }
+    //}
+
+    //Kokkos::deep_copy(conn, h_conn);
+    
+    IntView elem2Particles("notInitElem2Particles",0);
+ 
     //delete dynamic allocation
     delete [] xVertex;
     delete [] yVertex;
@@ -237,8 +271,8 @@ Mesh readMPASMesh(int ncid){
         delete [] cellsOnVertex[i];
     delete [] cellsOnVertex;
 
-//*/
 
+//*/
     return Mesh();
 }
 

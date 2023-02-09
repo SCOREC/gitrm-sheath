@@ -5,6 +5,8 @@
 // Handle errors by printing an error message and exiting with a non-zero status.
 #define ERR(e) {printf("Error: %s\n", nc_strerror(e)); return 2;}
 
+//Mesh readMPASMesh(int ncid);
+
 int main( int argc, char* argv[] ) {
 
     Kokkos::initialize(argc,argv);{
@@ -12,14 +14,18 @@ int main( int argc, char* argv[] ) {
         //{
         int factorOfMesh = atoi(argv[1]);
 
-/*      //MPASMesh
+///*      //MPASMesh
         int retval;
         int ncid;
         if ((retval = nc_open(argv[1], NC_NOWRITE, &ncid)))
           ERR(retval);
-        
-*/
-	//initialaize simple mesh 
+        //int dimid;
+        //if ((retval = nc_inq_dimid(ncid,"nVertices", &dimid)))
+        //  ERR(retval); 
+//*
+        auto meshRead = sheath::readMPASMesh(ncid);
+
+	//initialaize test mesh 
         auto mesh = sheath::initializeTestMesh(factorOfMesh);//100000
         // inititalizew single particle
 	// int rngSeed = 1010;
