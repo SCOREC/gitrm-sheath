@@ -12,9 +12,8 @@ set(SOURCES
 add_library (gitrmsheath-core ${SOURCES})
 
 target_include_directories(gitrmsheath-core INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> $<INSTALL_INTERFACE:include>)
-target_link_libraries(gitrmsheath-core Kokkos::kokkos)
-target_link_libraries (gitrmsheath-core PkgConfig::NetCDF)
-
+target_link_libraries(gitrmsheath-core PUBLIC Kokkos::kokkos)
+target_link_libraries(gitrmsheath-core PRIVATE PkgConfig::NetCDF)
 
 gitrmsheath_export_lib(gitrmsheath-core "${HEADERS}")
 
