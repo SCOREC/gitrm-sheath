@@ -17,7 +17,7 @@ int main( int argc, char* argv[] ) {
 ///*      //MPASMesh
         int retval;
         int ncid;
-        if ((retval = nc_open(argv[1], NC_NOWRITE, &ncid)))
+        if ((retval = nc_open("./mesh.QU.1920km.151026.nc", NC_NOWRITE, &ncid)))
           ERR(retval);
         //int dimid;
         //if ((retval = nc_inq_dimid(ncid,"nVertices", &dimid)))

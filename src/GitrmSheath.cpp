@@ -167,8 +167,8 @@ Mesh readMPASMesh(int ncid){
     double* xVertex;
     double* yVertex;
     double* zVertex; //nVertices
-    int** verticesOnCell;     //[maxEdges,nCells]
-    double** cellsOnVertex;   //[3,nVertices]
+    int* verticesOnCell;     //[maxEdges,nCells]
+    double* cellsOnVertex;   //[3,nVertices]
     if ((retval = nc_inq_dimid(ncid, "nCells", &nCellsID)))
         ERRexit(retval);
     if ((retval = nc_inq_dimid(ncid, "nVertices", &nVerticesID)))
@@ -203,26 +203,28 @@ Mesh readMPASMesh(int ncid){
     xVertex = new double[nVertices];
     yVertex = new double[nVertices];
     zVertex = new double[nVertices];
-    verticesOnCell = new int*[maxEdges];
-    for(int i=0; i<maxEdges; i++)
-        verticesOnCell[i] = new int[nCells];
-    cellsOnVertex = new double*[3]; //vertex dimension is 3
-    for(int i=0; i<3; i++)
-        cellsOnVertex[i] = new double[nVertices];
-
+    verticesOnCell = new int[maxEdges*nCells];//should be maxEdges?
     
-    if ((retval = nc_get_var(ncid, xVertexID, &xVertex)))
+    cellsOnVertex = new double[3*nVertices]; //vertex dimension is 3
+    
+    //printf("nVertices: %d, nCells: %d, maxEdges: %d\n", nVertices, nCells, maxEdges); 
+    
+    if ((retval = nc_get_var(ncid, xVertexID, xVertex)))
         ERRexit(retval);
-    if ((retval = nc_get_var(ncid, yVertexID, &yVertex)))
+    if ((retval = nc_get_var(ncid, yVertexID, yVertex)))
         ERRexit(retval);
-    if ((retval = nc_get_var(ncid, zVertexID, &zVertex)))
+    if ((retval = nc_get_var(ncid, zVertexID, zVertex)))
         ERRexit(retval);
-    if ((retval = nc_get_var(ncid, verticesOnCellID, &verticesOnCell)))
+    if ((retval = nc_get_var(ncid, verticesOnCellID, verticesOnCell)))
         ERRexit(retval);
-    if ((retval = nc_get_var(ncid, cellsOnVertexID, &cellsOnVertex)))
+    if ((retval = nc_get_var(ncid, cellsOnVertexID, cellsOnVertex)))
         ERRexit(retval);
-
-
+    
+    //for(int i=0; i<nVertices; i++){
+    //    printf("%d: (%.3f,%.3f,%.3f)\n",i,xVertex[i],yVertex[i],zVertex[i]);
+    //}
+    //for(int)
+/*
     //TODO: put the value into a mesh
     //Nel = nCell     Nnp = nVertices  maxEdges need a new variable
     //
@@ -260,19 +262,15 @@ Mesh readMPASMesh(int ncid){
     
     IntView elem2Particles("notInitElem2Particles",0);
  
+//*/
     //delete dynamic allocation
     delete [] xVertex;
     delete [] yVertex;
     delete [] zVertex;
-    for(int i=0; i<maxEdges; i++)
-        delete [] verticesOnCell[i];
     delete [] verticesOnCell;
-    for(int i=0; i<3; i++)
-        delete [] cellsOnVertex[i];
     delete [] cellsOnVertex;
 
 
-//*/
     return Mesh();
 }
 

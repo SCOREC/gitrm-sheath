@@ -375,7 +375,7 @@ void getWachpressCoeffsByArea(Vector2 xp,
 }
 
 KOKKOS_INLINE_FUNCTION
-void gradient(Vector2 xp, int numVerti, Vector2* v, double* l){
+void gradient(Vector2 xp, int numVerti, Vector2* v, double* phi){
     Vector2 e[maxVerti+1];
     Vector2 p[maxVerti+1];
     for(int i = 0; i<numVerti; i++){
@@ -406,19 +406,26 @@ void gradient(Vector2 xp, int numVerti, Vector2* v, double* l){
     }   
 
     for(int i = 0; i<numVerti; i++){
-        l[i] = w[i]/wSum;
+        phi[i] = w[i]/wSum;
         //if(numVerti == 3){
         //    printf("w[%d],wSum = %.3f, %.3f \n",i, w[i], wSum);
         //}
     }
     
     //finish the gradient calc
-    Vector2 gradientW[maxVerti];
+    //
+    //TODO: use ratio to form gradient 4.11 4.12
     Vector2 ratio[maxVerti];
-    for(int i=0;i<numVerti;i++){
-        gradientW[i] = Vector2(w[i]*(n[i][0]/h[i]+n[i+1][0]/h[i+1]),w[i]*(n[i][1]/h[i]+n[i+1][1]/h[i+1]));
-        ratio[i] = Vector2(gradientW[i][0]/w[i],gradientW[i][1]);
-        printf("gradientW[%d]= (%1.3e,%1.3e)\t| ratio[%d]= (%1.3e,%1.3e)\n",i,gradientW[i][0],gradientW[i][1],i,ratio[i][0],ratio[i][1]);
+    Vector2 sumR;
+    for(int i=0; i<numVerti; i++){
+        ratio[i] =  Vector2((n[i][0]/h[i]+n[i+1][0]/h[i+1]),(n[i][1]/h[i]+n[i+1][1]/h[i+1]));
+        sumR = Vector2((sumR[0]+phi[i]*ratio[i][0]),(sumR[1]+phi[i]*ratio[i][1]));
+    //    printf("gradientW[%d]= (%1.3e,%1.3e)\t| ratio[%d]= (%1.3e,%1.3e)\n",i,gradientW[i][0],gradientW[i][1],i,ratio[i][0],ratio[i][1]);
+    }
+    Vector2 gradientPhi[maxVerti];
+    for(int i=0; i<numVerti; i++){
+        gradientPhi[i] = Vector2(phi[i]*(ratio[i][0]-sumR[0]), phi[i]*(ratio[i][0]-sumR[1]));
+        printf("gradientPhi[%d]= (%1.3f,%1.3f)\n",i,gradientPhi[i][0],gradientPhi[i][1]);
     }
 }
 
