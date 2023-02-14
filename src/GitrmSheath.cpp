@@ -168,7 +168,7 @@ Mesh readMPASMesh(int ncid){
     double* yVertex;
     double* zVertex; //nVertices
     int* verticesOnCell;     //[maxEdges,nCells]
-    double* cellsOnVertex;   //[3,nVertices]
+    int* cellsOnVertex;   //[3,nVertices]
     if ((retval = nc_inq_dimid(ncid, "nCells", &nCellsID)))
         ERRexit(retval);
     if ((retval = nc_inq_dimid(ncid, "nVertices", &nVerticesID)))
@@ -205,10 +205,11 @@ Mesh readMPASMesh(int ncid){
     zVertex = new double[nVertices];
     verticesOnCell = new int[maxEdges*nCells];//should be maxEdges?
     
-    cellsOnVertex = new double[3*nVertices]; //vertex dimension is 3
+    cellsOnVertex = new int[3*nVertices]; //vertex dimension is 3
     
     //printf("nVertices: %d, nCells: %d, maxEdges: %d\n", nVertices, nCells, maxEdges); 
-    
+   
+ 
     if ((retval = nc_get_var(ncid, xVertexID, xVertex)))
         ERRexit(retval);
     if ((retval = nc_get_var(ncid, yVertexID, yVertex)))
@@ -220,10 +221,15 @@ Mesh readMPASMesh(int ncid){
     if ((retval = nc_get_var(ncid, cellsOnVertexID, cellsOnVertex)))
         ERRexit(retval);
     
-    //for(int i=0; i<nVertices; i++){
-    //    printf("%d: (%.3f,%.3f,%.3f)\n",i,xVertex[i],yVertex[i],zVertex[i]);
+    //nc_type xVerType;
+    //nc_inq_vartype(nci, cellsOnVertexID, &xVerType);
+    //printf("%d\n",xVerType);
+    //for(int i=0; i<nVertices; i+=3){
+        //printf("%d: (%.3f,%.3f,%.3f)\n",i,xVertex[i],yVertex[i],zVertex[i]);
+        //printf("%3d: (%3d,%3d,%3d)\n",i,cellsOnVertex[i],cellsOnVertex[i+1],cellsOnVertex[i+2]);
     //}
-    //for(int)
+
+
 /*
     //TODO: put the value into a mesh
     //Nel = nCell     Nnp = nVertices  maxEdges need a new variable

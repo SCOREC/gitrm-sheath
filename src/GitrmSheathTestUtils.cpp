@@ -746,7 +746,7 @@ void Particles::interpolateWachpress(){
     auto status = getParticleStatus();
 
     //100 1000 10000 100000 1000000 |(mem out)10000000
-    //numParticles = 1;
+    //numParticles = 10;
     Kokkos::parallel_for("Efield-2-particles",numParticles,KOKKOS_LAMBDA(const int ipart){
         if (status(ipart)){
             int iel = eID(ipart);

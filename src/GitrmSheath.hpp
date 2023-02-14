@@ -420,12 +420,14 @@ void gradient(Vector2 xp, int numVerti, Vector2* v, double* phi){
     for(int i=0; i<numVerti; i++){
         ratio[i] =  Vector2((n[i][0]/h[i]+n[i+1][0]/h[i+1]),(n[i][1]/h[i]+n[i+1][1]/h[i+1]));
         sumR = Vector2((sumR[0]+phi[i]*ratio[i][0]),(sumR[1]+phi[i]*ratio[i][1]));
-    //    printf("gradientW[%d]= (%1.3e,%1.3e)\t| ratio[%d]= (%1.3e,%1.3e)\n",i,gradientW[i][0],gradientW[i][1],i,ratio[i][0],ratio[i][1]);
+        //if(numVerti == 3)
+        //    printf("%d: phi= %1.3f |sumR= (%1.3f,%1.3f)\t| ratio= (%1.3f,%1.3f)\n",i,phi[i],sumR[0],sumR[1],ratio[i][0],ratio[i][1]);
     }
+    //printf("%d: phi= %1.3f |sumR= (%1.3f,%1.3f)\t| ratio= (%1.3f,%1.3f)\n",numVerti,phi[numVerti-1],sumR[0],sumR[1],ratio[numVerti-1][0],ratio[numVerti-1][1]);
     Vector2 gradientPhi[maxVerti];
     for(int i=0; i<numVerti; i++){
-        gradientPhi[i] = Vector2(phi[i]*(ratio[i][0]-sumR[0]), phi[i]*(ratio[i][0]-sumR[1]));
-        printf("gradientPhi[%d]= (%1.3f,%1.3f)\n",i,gradientPhi[i][0],gradientPhi[i][1]);
+        gradientPhi[i] = Vector2(phi[i]*(ratio[i][0]-sumR[0]), phi[i]*(ratio[i][1]-sumR[1]));
+        printf("%d: sumR= (%1.3f,%1.3f) |phi=%1.3f |ratio= (%7.3f,%7.3f) |gradientPhi= (%1.3f,%1.3f)\n",i,sumR[0],sumR[1],phi[i],ratio[i][0],ratio[i][1],gradientPhi[i][0],gradientPhi[i][1]);
     }
 }
 
