@@ -224,30 +224,30 @@ Mesh readMPASMesh(int ncid){
     //nc_type xVerType;
     //nc_inq_vartype(nci, cellsOnVertexID, &xVerType);
     //printf("%d\n",xVerType);
-    //for(int i=0; i<nVertices; i+=3){
+    for(int i=0; i<nVertices; i+=3){
         //printf("%d: (%.3f,%.3f,%.3f)\n",i,xVertex[i],yVertex[i],zVertex[i]);
-        //printf("%3d: (%3d,%3d,%3d)\n",i,cellsOnVertex[i],cellsOnVertex[i+1],cellsOnVertex[i+2]);
-    //}
+        printf("%3d: (%3d,%3d,%3d)\n",i,cellsOnVertex[i],cellsOnVertex[i+1],cellsOnVertex[i+2]);
+    }
 
-
-/*
+    Vector2View node("node-coord-vector", nVertices);
+    
+    Vector2View::HostMirror h_node = Kokkos::create_mirror_view(node);
+    for(int i=0; i<nVertices; i++){
+        h_node(i) = Vector2(xVertex[i],yVertex[i]); 
+    }
+    Kokkos::deep_copy(node, h_node);
+///*
     //TODO: put the value into a mesh
     //Nel = nCell     Nnp = nVertices  maxEdges need a new variable
     //
-    Vector2View node("node-coord-vector", nVertices);
     //IntElemsPerVertView vertex2Elems("vertexToElements",nVertices);
     
-    Vector2View::HostMirror h_node = Kokkos::create_mirror_view(node);
     //IntElemsPerVertView::HostMirror h_vertex2Elems = Kokkos::create_mirror_view(vertex2Elems);
-    for(int i=0; i<nVertices; i++){
-        h_node(i) = Vector2(xVertex[i],yVertex[i]); 
         //h_vertex2Elems(i,0) = verticesOnCell[i][0];
         //for(int j=0; j<=; j++){
         //    h_vertex2Elems(i) = vertex2Elems_array[i][j]+f*Nel_size; 
         //}
-    }
     
-    Kokkos::deep_copy(node, h_node);
     //Kokkos::deep_copy(vertex2Elems,h_vertex2Elems);
     
 
@@ -257,14 +257,14 @@ Mesh readMPASMesh(int ncid){
 
     Int4View::HostMirror h_conn = Kokkos::create_mirror_view(conn);
     
-    //for(int i=0; i<nCell; i++){
+    for(int i=0; i<nCells; i++){
+    }
     //    h_conn(i,0) = node_array[i];
     //    for(int j=0; j<h_conn(i,0); j++){
     //        h_conn(i+f*Nel_size,j+1) = conn_array[i][j] + f*Nnp_size;
     //    }
-    //}
 
-    //Kokkos::deep_copy(conn, h_conn);
+    Kokkos::deep_copy(conn, h_conn);
     
     IntView elem2Particles("notInitElem2Particles",0);
  
