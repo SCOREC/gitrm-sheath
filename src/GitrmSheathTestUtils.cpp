@@ -774,16 +774,22 @@ void Particles::interpolateWachpress(){
             initArrayWith(wByArea,maxVerti,0.0);
             getWachpressCoeffsByArea(xp(ipart), numEverts, v, wByArea);
             
-            double wByGradient[maxVerti] = {0.0};
-            gradient(xp(ipart), numEverts, v, wByGradient);
+            double wByHeight[maxVerti] = {0.0};
+            Vector2 gradWByHeight[maxVerti];
+            gradient(xp(ipart), numEverts, v, wByHeight, gradWByHeight);
 
             Vector2 wp_coordByArea(0,0);
             Vector2 wp_coordByGradient(0,0);
+            Vector2 gradFByHeightAtP(0,0);
             for(int i = 0; i<maxVerti; i++){
-	      //  wp_coord = wp_coord + v[i]*w[i]; 
+	        double Fi = 1 + 10.36*v[i][0]+12.2*v[i][1];
+                gradFByHeightAtP = Vector2(gradFByHeightAtP[0] + Fi*gradWByHeight[i][0],gradFByHeightAtP[1] + Fi*gradWByHeight[i][1]);
 	        wp_coordByArea = wp_coordByArea + v[i]*wByArea[i]; 
-	        wp_coordByGradient = wp_coordByGradient + v[i]*wByGradient[i];  
+	        wp_coordByGradient = wp_coordByGradient + v[i]*wByHeight[i];  
             }   
+                //print AtP[0]  AtP[1]
+                //check 10.36   12.2
+            //printf("gradFByHeightAtP= (%6.3f,%6.3f)\n",gradFByHeightAtP[0],gradFByHeightAtP[1]);
             
             //if(iel%11 == 0){
             //printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e) wpByArea:(%1.3e,%1.3e) wpByGradient:(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coordByArea[0],wp_coordByArea[1],wp_coordByGradient[0],wp_coordByGradient[1]);

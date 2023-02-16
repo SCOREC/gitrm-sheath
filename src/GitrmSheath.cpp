@@ -163,10 +163,12 @@ Mesh readMPASMesh(int ncid){
         maxEdges, maxEdgesID;
     size_t temp;
 
-    int xVertexID, yVertexID, zVertexID, verticesOnCellID, cellsOnVertexID;
+    int xVertexID, yVertexID, zVertexID, lonVertexID, latVertexID, verticesOnCellID, cellsOnVertexID;
     double* xVertex;
     double* yVertex;
     double* zVertex; //nVertices
+    double* lonVertex; // 2d y
+    double* latVertex; // 2d x
     int* verticesOnCell;     //[maxEdges,nCells]
     int* cellsOnVertex;   //[3,nVertices]
     if ((retval = nc_inq_dimid(ncid, "nCells", &nCellsID)))
@@ -195,6 +197,10 @@ Mesh readMPASMesh(int ncid){
         ERRexit(retval);
     if ((retval = nc_inq_varid(ncid, "zVertex", &zVertexID)))
         ERRexit(retval);
+    if ((retval = nc_inq_varid(ncid, "lonVertex", &lonVertexID)))
+        ERRexit(retval);
+    if ((retval = nc_inq_varid(ncid, "latVertex", &latVertexID)))
+        ERRexit(retval);
     if ((retval = nc_inq_varid(ncid, "verticesOnCell", &verticesOnCellID)))
         ERRexit(retval);
     if ((retval = nc_inq_varid(ncid, "cellsOnVertex", &cellsOnVertexID)))
@@ -203,76 +209,114 @@ Mesh readMPASMesh(int ncid){
     xVertex = new double[nVertices];
     yVertex = new double[nVertices];
     zVertex = new double[nVertices];
+    lonVertex = new double[nVertices];
+    latVertex = new double[nVertices];
     verticesOnCell = new int[maxEdges*nCells];//should be maxEdges?
     
     cellsOnVertex = new int[3*nVertices]; //vertex dimension is 3
     
-    //printf("nVertices: %d, nCells: %d, maxEdges: %d\n", nVertices, nCells, maxEdges); 
-   
- 
+    if(maxEdges> maxVerti){
+        perror("maxEdges out of bound!\n");
+        exit(1);     
+    }
+
     if ((retval = nc_get_var(ncid, xVertexID, xVertex)))
         ERRexit(retval);
     if ((retval = nc_get_var(ncid, yVertexID, yVertex)))
         ERRexit(retval);
     if ((retval = nc_get_var(ncid, zVertexID, zVertex)))
         ERRexit(retval);
+    if ((retval = nc_get_var(ncid, lonVertexID, lonVertex)))
+        ERRexit(retval);
+    if ((retval = nc_get_var(ncid, latVertexID, latVertex)))
+        ERRexit(retval);
     if ((retval = nc_get_var(ncid, verticesOnCellID, verticesOnCell)))
         ERRexit(retval);
     if ((retval = nc_get_var(ncid, cellsOnVertexID, cellsOnVertex)))
         ERRexit(retval);
-    
-    //nc_type xVerType;
-    //nc_inq_vartype(nci, cellsOnVertexID, &xVerType);
-    //printf("%d\n",xVerType);
-    for(int i=0; i<nVertices; i+=3){
-        //printf("%d: (%.3f,%.3f,%.3f)\n",i,xVertex[i],yVertex[i],zVertex[i]);
-        printf("%3d: (%3d,%3d,%3d)\n",i,cellsOnVertex[i],cellsOnVertex[i+1],cellsOnVertex[i+2]);
+
+/* check 
+    //ParaView app
+    //save as .vtp
+    //save as ascii
+    //
+    nc_type xVerType;
+    nc_inq_vartype(nci, cellsOnVertexID, &xVerType);
+    printf("%d\n",xVerType);
+    printf("nVertices: %d, nCells: %d, maxEdges: %d\n", nVertices, nCells, maxEdges); 
+    for(int i=0; i<nVertices; i++){
+        printf("%3d: (%6.3f,%6.3f,%6.3f) |(%6.3f,%6.3f)\n",i,xVertex[i],yVertex[i],zVertex[i],latVertex[i],lonVertex[i]);
     }
+    for(int i=0; i<nVertices*3; i+=3){
+        printf("%3d: (%3d,%3d,%3d)\n",i/3,cellsOnVertex[i],cellsOnVertex[i+1],cellsOnVertex[i+2]);
+    }
+    for(int i=0; i<nCells; i++){
+        for(int j=0; j<maxEdges; j++){
+            printf("%3d ", verticesOnCell[i*maxEdges+j]);
+        } 
+        printf("\n");
+    }
+//================================================*/
+
+
 
     Vector2View node("node-coord-vector", nVertices);
-    
+
+    //TODO: find a new way to convert the nodes/vertices location    
     Vector2View::HostMirror h_node = Kokkos::create_mirror_view(node);
     for(int i=0; i<nVertices; i++){
-        h_node(i) = Vector2(xVertex[i],yVertex[i]); 
+        h_node(i) = Vector2(latVertex[i],lonVertex[i]); 
     }
     Kokkos::deep_copy(node, h_node);
-///*
-    //TODO: put the value into a mesh
-    //Nel = nCell     Nnp = nVertices  maxEdges need a new variable
-    //
-    //IntElemsPerVertView vertex2Elems("vertexToElements",nVertices);
-    
-    //IntElemsPerVertView::HostMirror h_vertex2Elems = Kokkos::create_mirror_view(vertex2Elems);
-        //h_vertex2Elems(i,0) = verticesOnCell[i][0];
-        //for(int j=0; j<=; j++){
-        //    h_vertex2Elems(i) = vertex2Elems_array[i][j]+f*Nel_size; 
-        //}
-    
-    //Kokkos::deep_copy(vertex2Elems,h_vertex2Elems);
-    
 
+
+    //TODO: deal with the array size and convert it to conn
     Vector2View Efield("Efield-vector",nVertices); 
     Int4View conn("elem-connectivty",nCells);
     Int4View elemFaceBdry("elem-face-boundary",nCells);
 
     Int4View::HostMirror h_conn = Kokkos::create_mirror_view(conn);
     
+    int count;
     for(int i=0; i<nCells; i++){
+        for(count=0; count<maxEdges; count++)
+        {
+            if(verticesOnCell[i*maxEdges+count] == 0){
+                break;  
+            }
+            h_conn(i,count+1) = verticesOnCell[i*maxEdges+count];       
+        }
+        h_conn(i,0) = count;
     }
-    //    h_conn(i,0) = node_array[i];
-    //    for(int j=0; j<h_conn(i,0); j++){
-    //        h_conn(i+f*Nel_size,j+1) = conn_array[i][j] + f*Nnp_size;
-    //    }
 
     Kokkos::deep_copy(conn, h_conn);
     
     IntView elem2Particles("notInitElem2Particles",0);
  
-//*/
+///*   vtp print out
+    printf("<VTKFile type=\"PolyData\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\">\n  <PolyData>\n    <Piece NumberOfPoints=\"%d\" NumberOfVerts=\"0\" NumberOfLines=\"0\" NumberOfStrips=\"0\" NumberOfPolys=\"%d\">\n      <Points>\n        <DataArray type=\"Float32\" Name=\"Points\" NumberOfComponents=\"3\" format=\"ascii\">\n",nVertices,nCells);
+    for(int i=0; i<nVertices; i++){
+        printf("          %f %f %f\n",xVertex[i],yVertex[i],zVertex[i]);
+    }
+    printf("        </DataArray>\n      </Points>\n      <Polys>\n        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"ascii\">\n");
+    for(int i=0; i<nCells; i++){
+        printf("%d          ",h_conn(i,0));
+        count = h_conn(i,0);
+        for(int j=0; j< count; j++){
+            printf("%3d ", h_conn(i,j)-1);
+        } 
+        printf("\n");
+    }
+     
+
+////================================================*/
+
     //delete dynamic allocation
     delete [] xVertex;
     delete [] yVertex;
     delete [] zVertex;
+    delete [] lonVertex;
+    delete [] latVertex;
     delete [] verticesOnCell;
     delete [] cellsOnVertex;
 
