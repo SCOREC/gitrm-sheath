@@ -414,7 +414,8 @@ void gradient(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gradie
     
     //finish the gradient calc
     //
-    //TODO: use ratio to form gradient 4.11 4.12
+    //TODO: gradient at vertex location
+    //      new formular
     Vector2 ratio[maxVerti];
     Vector2 sumR;
     for(int i=0; i<numVerti; i++){

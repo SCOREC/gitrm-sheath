@@ -163,14 +163,15 @@ Mesh readMPASMesh(int ncid){
         maxEdges, maxEdgesID;
     size_t temp;
 
-    int xVertexID, yVertexID, zVertexID, lonVertexID, latVertexID, verticesOnCellID, cellsOnVertexID;
+    int xVertexID, yVertexID, zVertexID, lonVertexID, latVertexID, verticesOnCellID, cellsOnVertexID, nEdgesOnCellID;
     double* xVertex;
     double* yVertex;
-    double* zVertex; //nVertices
-    double* lonVertex; // 2d y
-    double* latVertex; // 2d x
-    int* verticesOnCell;     //[maxEdges,nCells]
-    int* cellsOnVertex;   //[3,nVertices]
+    double* zVertex;    //nVertices
+    double* lonVertex;  // 2d y
+    double* latVertex;  // 2d x
+    int* verticesOnCell;//[maxEdges,nCells]
+    int* cellsOnVertex; //[3,nVertices]
+    int* nEdgesOnCell;  //[nCells]
     if ((retval = nc_inq_dimid(ncid, "nCells", &nCellsID)))
         ERRexit(retval);
     if ((retval = nc_inq_dimid(ncid, "nVertices", &nVerticesID)))
@@ -205,15 +206,18 @@ Mesh readMPASMesh(int ncid){
         ERRexit(retval);
     if ((retval = nc_inq_varid(ncid, "cellsOnVertex", &cellsOnVertexID)))
         ERRexit(retval);
+    if ((retval = nc_inq_varid(ncid, "nEdgesOnCell", &nEdgesOnCellID)))
+        ERRexit(retval);
 
     xVertex = new double[nVertices];
     yVertex = new double[nVertices];
     zVertex = new double[nVertices];
     lonVertex = new double[nVertices];
     latVertex = new double[nVertices];
-    verticesOnCell = new int[maxEdges*nCells];//should be maxEdges?
+    verticesOnCell = new int[maxEdges*nCells];
     
     cellsOnVertex = new int[3*nVertices]; //vertex dimension is 3
+    nEdgesOnCell = new int[nCells];
     
     if(maxEdges> maxVerti){
         perror("maxEdges out of bound!\n");
@@ -234,24 +238,26 @@ Mesh readMPASMesh(int ncid){
         ERRexit(retval);
     if ((retval = nc_get_var(ncid, cellsOnVertexID, cellsOnVertex)))
         ERRexit(retval);
+    if ((retval = nc_get_var(ncid, nEdgesOnCellID, nEdgesOnCell)))
+        ERRexit(retval);
 
 /* check 
     //ParaView app
     //save as .vtp
     //save as ascii
     //
-    nc_type xVerType;
-    nc_inq_vartype(nci, cellsOnVertexID, &xVerType);
-    printf("%d\n",xVerType);
+    //nc_type xVerType;
+    //nc_inq_vartype(ncid, cellsOnVertexID, &xVerType);
+    //printf("%d\n",xVerType);
     printf("nVertices: %d, nCells: %d, maxEdges: %d\n", nVertices, nCells, maxEdges); 
     for(int i=0; i<nVertices; i++){
-        printf("%3d: (%6.3f,%6.3f,%6.3f) |(%6.3f,%6.3f)\n",i,xVertex[i],yVertex[i],zVertex[i],latVertex[i],lonVertex[i]);
+    //    printf("%3d: (%6.3f,%6.3f,%6.3f) |(%6.3f,%6.3f)\n",i,xVertex[i],yVertex[i],zVertex[i],latVertex[i],lonVertex[i]);
     }
     for(int i=0; i<nVertices*3; i+=3){
-        printf("%3d: (%3d,%3d,%3d)\n",i/3,cellsOnVertex[i],cellsOnVertex[i+1],cellsOnVertex[i+2]);
+    //    printf("%3d: (%3d,%3d,%3d)\n",i/3,cellsOnVertex[i],cellsOnVertex[i+1],cellsOnVertex[i+2]);
     }
     for(int i=0; i<nCells; i++){
-        for(int j=0; j<maxEdges; j++){
+        for(int j=0; j<nEdgesOnCell[i]; j++){
             printf("%3d ", verticesOnCell[i*maxEdges+j]);
         } 
         printf("\n");
@@ -277,37 +283,39 @@ Mesh readMPASMesh(int ncid){
 
     Int4View::HostMirror h_conn = Kokkos::create_mirror_view(conn);
     
-    int count;
     for(int i=0; i<nCells; i++){
-        for(count=0; count<maxEdges; count++)
+        h_conn(i,0) = nEdgesOnCell[i];
+        for(int j=0; j<nEdgesOnCell[i]; j++)
         {
-            if(verticesOnCell[i*maxEdges+count] == 0){
-                break;  
-            }
-            h_conn(i,count+1) = verticesOnCell[i*maxEdges+count];       
+            h_conn(i,j+1) = verticesOnCell[i*maxEdges+j];       
         }
-        h_conn(i,0) = count;
     }
 
     Kokkos::deep_copy(conn, h_conn);
     
     IntView elem2Particles("notInitElem2Particles",0);
  
-///*   vtp print out
+/*   vtp print out
     printf("<VTKFile type=\"PolyData\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\">\n  <PolyData>\n    <Piece NumberOfPoints=\"%d\" NumberOfVerts=\"0\" NumberOfLines=\"0\" NumberOfStrips=\"0\" NumberOfPolys=\"%d\">\n      <Points>\n        <DataArray type=\"Float32\" Name=\"Points\" NumberOfComponents=\"3\" format=\"ascii\">\n",nVertices,nCells);
     for(int i=0; i<nVertices; i++){
         printf("          %f %f %f\n",xVertex[i],yVertex[i],zVertex[i]);
     }
     printf("        </DataArray>\n      </Points>\n      <Polys>\n        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"ascii\">\n");
     for(int i=0; i<nCells; i++){
-        printf("%d          ",h_conn(i,0));
-        count = h_conn(i,0);
-        for(int j=0; j< count; j++){
-            printf("%3d ", h_conn(i,j)-1);
+        printf("          ");
+        for(int j=0; j< nEdgesOnCell[i]; j++){
+            printf("%d ", h_conn(i,j+1)-1);
         } 
         printf("\n");
     }
-     
+    printf("        </DataArray>\n        <DataArray type=\"Int64\" Name=\"offsets\" format=\"ascii\">\n");
+    
+    int count = 0;
+    for(int i=0;i<nCells; i++){
+        count += h_conn(i,0);
+        printf("          %d\n",count);
+    }
+    printf("        </DataArray>\n      </Polys>\n    </Piece>\n  </PolyData>\n</VTKFile>\n");
 
 ////================================================*/
 
