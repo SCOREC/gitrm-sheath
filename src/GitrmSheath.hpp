@@ -115,6 +115,21 @@ Mesh initializeTestMesh(int factor);
 Mesh readMPASMesh(int ncid);
 
 KOKKOS_INLINE_FUNCTION
+void initArrayWith(Vector2 arr[],int n, Vector2 fill){
+    for(int i=0; i<n; i++){
+        arr[i] = fill;
+    }
+}
+
+KOKKOS_INLINE_FUNCTION
+void initArrayWith(double arr[],int n, double fill){
+    for(int i=0; i<n; i++){
+        arr[i] = fill;
+    }
+}
+
+
+KOKKOS_INLINE_FUNCTION
 bool P2LCheck(Vector2 xp, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4){
     Vector2 e1 = v2-v1;
     Vector2 e2 = v3-v2;
@@ -434,6 +449,174 @@ void gradient(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gradie
     }
 }
 
+
+KOKKOS_INLINE_FUNCTION
+void gradientIntrepid(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gradientPhi){
+    
+    double numerator[maxVerti];
+    double denominator = 0.0;
+    Vector2 derivative[maxVerti];
+    Vector2 derivative_sum;
+
+    for(int k=0; k<numVerti; k++){
+        int i = numVerti;
+        if (k>0)
+            i = k-1;
+        int j = k+1;
+        double a_k = 0.5*(v[i][0]*(v[k][1]-v[j][1]) - v[k][0]*(v[i][1]-v[j][1]) + v[j][0]*(v[i][1]-v[k][1]));
+        
+        double product = a_k;
+        for(int m=0; m<numVerti; m++){
+            i = m;
+            j = m+1;
+            if(m == numVerti-1)
+                j=0;
+            if(i!=k && j!=k){
+                double a_ij = 0.5*(xp[0]*(v[j][1]-v[i][1]) - v[j][0]*(xp[1]-v[i][1]) + v[i][0]*(xp[1]-v[j][1]));
+                product *= a_ij;
+            }
+        }
+        numerator[k] = product;
+        denominator += numerator[k];
+
+        double product_sum[2] = {0.0,0.0};
+        for(int m=0; m<numVerti; m++){
+            i = m;
+            j = m+1;
+            if(m == numVerti-1)
+                j = 0;
+            
+            if(i!=k && j!=k){
+                double product_dx = a_k,product_dy = a_k;
+                for(int l=0; l<numVerti; l++){
+                    int s = l;
+                    int t = l+1;
+                    if(l == numVerti-1)
+                        t=0;
+                    if(s!=k && t!=k){
+                        if(l!=m){
+                            double a_st = 0.5*(xp[0]*(v[t][1]-v[s][1]) - v[t][0]*(xp[1]-v[s][1]) + v[s][0]*(xp[1]-v[t][1]));
+                            product_dx *= a_st;
+                            product_dy *= a_st;
+                        }else{
+                            double a_st_dx = 0.5*(v[t][1]-v[s][1]);
+                            double a_st_dy = 0.5*(v[s][0]-v[t][0]);
+                            product_dx *= a_st_dx;
+                            product_dy *= a_st_dy;
+                        }
+                    }    
+                }
+                product_sum[0] += product_dx;
+                product_sum[1] += product_dy;
+            }
+        }
+        derivative[k] = Vector2(product_sum) ;
+        derivative_sum = Vector2(derivative_sum[0] + derivative[k][0],derivative_sum[1] + derivative[k][1]);
+    }
+    
+    for(int k=0; k<numVerti; k++){
+        phi[k] = numerator[k]/denominator;
+        gradientPhi[k] = Vector2(derivative[k][0]/denominator - (numerator[k]/(denominator*denominator))*derivative_sum[0],derivative[k][1]/denominator - (numerator[k]/(denominator*denominator))*derivative_sum[1]);       
+    }   
+}
+
+KOKKOS_INLINE_FUNCTION
+void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gradientPhi){
+    double A[maxVerti];
+    double B[maxVerti];
+    double kappa[maxVerti][maxVerti];
+    
+    for(int iVertex=0; iVertex<numVerti; iVertex++){
+        int i1 = iVertex -1;
+        int i2 = iVertex;
+        if(i1<0)
+            i1 = numVerti-1;
+        
+        A[iVertex] = (v[i2][1]-v[i1][1])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
+        B[iVertex] = (v[i1][0]-v[i2][0])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
+        
+    }
+    
+    for(int iVertex=0; iVertex<numVerti;iVertex++){
+        kappa[0][iVertex] = 1;
+        for(int jVertex=1; jVertex<numVerti; jVertex++){
+            int i0 = jVertex-1;
+            int i1 = jVertex;
+            int i2 = jVertex+1;
+            if(i2 == numVerti)
+                i2 = 0;
+         
+            kappa[jVertex][iVertex] = kappa[jVertex-1][iVertex]*(A[i2]*(v[i0][0]-v[i1][0])+B[i2]*(v[i0][1]-v[i1][1])) / (A[i0]*(v[i1][0]-v[i0][0])+B[i0]*(v[i1][1]-v[i0][1])); 
+        }
+    }
+
+    int nEdgesOnCellSubset[maxVerti];
+    int vertexIndexSubset[maxVerti][maxVerti];
+        
+    for(int jVertex=0; jVertex<numVerti; jVertex++){
+        int i1 = jVertex;
+        int i2 = jVertex + 1;
+        if(i2 == numVerti)
+            i2 = 0;
+        
+        nEdgesOnCellSubset[jVertex] = 0;
+
+        for(int kVertex=0; kVertex<numVerti; kVertex++){
+            if(kVertex!=i1 && kVertex!=i2){
+                nEdgesOnCellSubset[jVertex] = nEdgesOnCellSubset[jVertex]+1;
+                vertexIndexSubset[jVertex][nEdgesOnCellSubset[jVertex]] = kVertex;
+            }
+            if(nEdgesOnCellSubset[jVertex] != 0)
+                --nEdgesOnCellSubset[jVertex]; 
+            if(vertexIndexSubset[jVertex][nEdgesOnCellSubset[jVertex]] != 0)
+                --vertexIndexSubset[jVertex][nEdgesOnCellSubset[jVertex]];
+        }    
+    } 
+
+    //check the above two nE vI
+
+    for(int iVertex=0; iVertex<numVerti; iVertex++){
+        double numerator[maxVerti];
+        initArrayWith(numerator,maxVerti,1.0);
+        double denominator = 0.0;
+        Vector2 derivative[maxVerti];//use as a double[2]
+        double derivatives_sum[2] = {0.0,0.0};
+        for(int jVertex=0; jVertex<numVerti; jVertex++){
+        for(int kVertex=0; kVertex< nEdgesOnCellSubset[jVertex];kVertex++){
+            double edge_equation = 1.0 -A[vertexIndexSubset[jVertex][kVertex]]*xp[0] - B[vertexIndexSubset[jVertex][kVertex]]*xp[1];
+            numerator[jVertex] = numerator[jVertex]*edge_equation;
+        }
+        numerator[jVertex] *= kappa[jVertex][iVertex];
+        denominator += numerator[jVertex];
+        double product_sum[2] = {0.0,0.0};
+        for(int kVertex=0; kVertex<nEdgesOnCellSubset[jVertex]; kVertex++){
+            double product[2] = {1.0,1.0};
+            for(int lVertex=0; lVertex<kVertex-1; lVertex++){
+                double edge_equation = 1.0 - A[vertexIndexSubset[jVertex][lVertex]]*xp[0] - B[vertexIndexSubset[jVertex][lVertex]]*xp[1];
+                product[0] *= edge_equation;
+                product[1] *= edge_equation;
+            }
+            product[0] *= -A[vertexIndexSubset[jVertex][kVertex]];
+            product[1] *= -B[vertexIndexSubset[jVertex][kVertex]];
+            for(int lVertex = kVertex; lVertex < nEdgesOnCellSubset[jVertex]; lVertex++){
+                //TODO: check the index is correct or not
+                double edge_equation = 1.0 - A[vertexIndexSubset[jVertex][lVertex]]*xp[0] - B[vertexIndexSubset[jVertex][lVertex]]*xp[1];
+                product[0] *= edge_equation;
+                product[1] *= edge_equation;
+            }
+            product_sum[0] += product[0];
+            product_sum[1] += product[1];
+        }
+        derivative[jVertex] = Vector2(product_sum[0]*kappa[jVertex][iVertex],product_sum[1]*kappa[jVertex][iVertex]);
+        derivatives_sum[0] += product_sum[0]*kappa[jVertex][iVertex];
+        derivatives_sum[1] += product_sum[1]*kappa[jVertex][iVertex];
+        }
+        phi[iVertex] = numerator[iVertex]/denominator;
+        gradientPhi[iVertex] = Vector2(derivative[iVertex][0]/denominator-(numerator[iVertex]/(denominator*denominator))*derivatives_sum[0],derivative[iVertex][1]/denominator-(numerator[iVertex]/(denominator*denominator))*derivatives_sum[1]);              
+    }  
+}
+
+
 KOKKOS_INLINE_FUNCTION
 void getTriangleBC(Vector2 xp, Vector2 v1,
                     Vector2 v2, Vector2 v3,
@@ -699,19 +882,6 @@ FaceDir MacphersonCheckForNorthEntry(Vector2 xp, Vector2 dx, Vector2 v1, Vector2
 }
 
 
-KOKKOS_INLINE_FUNCTION
-void initArrayWith(Vector2 arr[],int n, Vector2 fill){
-    for(int i=0; i<n; i++){
-        arr[i] = fill;
-    }
-}
-
-KOKKOS_INLINE_FUNCTION
-void initArrayWith(double arr[],int n, double fill){
-    for(int i=0; i<n; i++){
-        arr[i] = fill;
-    }
-}
 
 } // namespace sheath
 
