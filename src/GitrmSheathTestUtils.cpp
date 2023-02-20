@@ -746,7 +746,7 @@ void Particles::interpolateWachpress(){
     auto status = getParticleStatus();
 
     //100 1000 10000 100000 1000000 |(mem out)10000000
-    numParticles = 1;
+    //numParticles = 1;
     Kokkos::parallel_for("Efield-2-particles",numParticles,KOKKOS_LAMBDA(const int ipart){
         if (status(ipart)){
             int iel = eID(ipart);
@@ -758,9 +758,10 @@ void Particles::interpolateWachpress(){
             int numEverts = conn(iel,0);
             for(int i = 1; i<=numEverts; i++){
                 v[i-1] = nodes(conn(iel,i)-1);
-                printf("%f %f\n",v[i-1][0],v[i-1][1]);
+                //if(numEverts == 7)
+                //    printf("%f %f\n",v[i-1][0],v[i-1][1]);
             }
-            printf("xp:%f,%f",xp(ipart)[0],xp(ipart)[1]);
+            //printf("xp:%f,%f:\n",xp(ipart)[0],xp(ipart)[1]);
             //1 2 ... n 1
             v[numEverts] = nodes(conn(iel,1)-1);
 
@@ -799,7 +800,7 @@ void Particles::interpolateWachpress(){
             }   
                 //print AtP[0]  AtP[1]
                 //check 10.36   12.2
-            printf("gradFByHeightAtP= (%6.3f,%6.3f) |gradFMPAS= (%6.3f,%6.3f)\n",gradFByHeightAtP[0],gradFByHeightAtP[1],gradFMPASAtP[0],gradFMPASAtP[1]);
+            //printf("gradFByHeightAtP= (%6.3f,%6.3f) |gradFMPAS= (%6.3f,%6.3f)\n",gradFByHeightAtP[0],gradFByHeightAtP[1],gradFMPASAtP[0],gradFMPASAtP[1]);
             
             //if(iel%11 == 0){
             //printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e) wpByArea:(%1.3e,%1.3e) wpByGradient:(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coordByArea[0],wp_coordByArea[1],wp_coordByGradient[0],wp_coordByGradient[1]);

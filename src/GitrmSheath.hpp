@@ -531,10 +531,12 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
         int i2 = iVertex;
         if(i1<0)
             i1 = numVerti-1;
-        
+       
+        // cant solve the xy axis line 
         A[iVertex] = (v[i2][1]-v[i1][1])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
         B[iVertex] = (v[i1][0]-v[i2][0])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
-        
+        //if(numVerti == 7) checked
+        //    printf("(%f,%f)|%d: A= %6.3f, B= %6.3f\n",xp[0],xp[1],iVertex, A[iVertex], B[iVertex]);   
     }
     
     for(int iVertex=0; iVertex<numVerti;iVertex++){
@@ -546,9 +548,18 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
             if(i2 == numVerti)
                 i2 = 0;
          
-            kappa[jVertex][iVertex] = kappa[jVertex-1][iVertex]*(A[i2]*(v[i0][0]-v[i1][0])+B[i2]*(v[i0][1]-v[i1][1])) / (A[i0]*(v[i1][0]-v[i0][0])+B[i0]*(v[i1][1]-v[i0][1])); 
+            kappa[jVertex][iVertex] = kappa[jVertex-1][iVertex]*
+                                        (A[i2]*(v[i0][0]-v[i1][0])+B[i2]*(v[i0][1]-v[i1][1]))                                   / (A[i0]*(v[i1][0]-v[i0][0])+B[i0]*(v[i1][1]-v[i0][1])); 
         }
     }
+
+    /*checked 
+    if(numVerti == 7){
+        for(int iVertex=0; iVertex<numVerti; iVertex++){
+            printf("%f ",kappa[iVertex][0]);
+        }
+        printf("\n");
+    }*/
 
     int nEdgesOnCellSubset[maxVerti];
     int vertexIndexSubset[maxVerti][maxVerti];
