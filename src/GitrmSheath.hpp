@@ -562,7 +562,7 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
     }*/
 
     int nEdgesOnCellSubset[maxVerti];
-    int vertexIndexSubset[maxVerti][maxVerti];
+    int vertexIndexSubset[maxVerti][maxVerti] = {0};
         
     for(int jVertex=0; jVertex<numVerti; jVertex++){
         int i1 = jVertex;
@@ -575,42 +575,51 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
         for(int kVertex=0; kVertex<numVerti; kVertex++){
             if(kVertex!=i1 && kVertex!=i2){
                 nEdgesOnCellSubset[jVertex] = nEdgesOnCellSubset[jVertex]+1;
-                vertexIndexSubset[jVertex][nEdgesOnCellSubset[jVertex]] = kVertex;
+                vertexIndexSubset[jVertex][nEdgesOnCellSubset[jVertex]-1] = kVertex;
             }
-            if(nEdgesOnCellSubset[jVertex] != 0)
-                --nEdgesOnCellSubset[jVertex]; 
-            if(vertexIndexSubset[jVertex][nEdgesOnCellSubset[jVertex]] != 0)
-                --vertexIndexSubset[jVertex][nEdgesOnCellSubset[jVertex]];
+            //if(nEdgesOnCellSubset[jVertex] != 0)
+            //    --nEdgesOnCellSubset[jVertex]; 
+            //if(vertexIndexSubset[jVertex][nEdgesOnCellSubset[jVertex]] != 0)
+            //    --vertexIndexSubset[jVertex][nEdgesOnCellSubset[jVertex]];
         }    
     } 
 
     //check the above two nE vI
-
+    //CORRECT CHECKED
+    //if(numVerti == 7){
+    //    int index = 6;
+    //    printf("%d|%d,%d,%d,%d,%d,%d,%d\n",nEdgesOnCellSubset[index],vertexIndexSubset[index][0],vertexIndexSubset[index][1],vertexIndexSubset[index][2],vertexIndexSubset[index][3],vertexIndexSubset[index][4],vertexIndexSubset[index][5],vertexIndexSubset[index][6]);
+    //}
+///*
     for(int iVertex=0; iVertex<numVerti; iVertex++){
         double numerator[maxVerti];
         initArrayWith(numerator,maxVerti,1.0);
         double denominator = 0.0;
-        Vector2 derivative[maxVerti];//use as a double[2]
+        double derivative[maxVerti][2];
         double derivatives_sum[2] = {0.0,0.0};
         for(int jVertex=0; jVertex<numVerti; jVertex++){
-        for(int kVertex=0; kVertex< nEdgesOnCellSubset[jVertex];kVertex++){
-            double edge_equation = 1.0 -A[vertexIndexSubset[jVertex][kVertex]]*xp[0] - B[vertexIndexSubset[jVertex][kVertex]]*xp[1];
-            numerator[jVertex] = numerator[jVertex]*edge_equation;
-        }
+            for(int kVertex=0; kVertex< nEdgesOnCellSubset[jVertex];kVertex++){
+                double edge_equation = 1.0 -A[vertexIndexSubset[jVertex][kVertex]]*xp[0] - B[vertexIndexSubset[jVertex][kVertex]]*xp[1];
+                numerator[jVertex] *= edge_equation;
+            }
         numerator[jVertex] *= kappa[jVertex][iVertex];
+        // error occur 
+        // numerator calc not correct
+        //if(numVerti == 7) 
+        //    printf("%d:%f\n",jVertex,numerator[jVertex]);
+        //ERROR SOLVED 2/20 yg
         denominator += numerator[jVertex];
         double product_sum[2] = {0.0,0.0};
         for(int kVertex=0; kVertex<nEdgesOnCellSubset[jVertex]; kVertex++){
             double product[2] = {1.0,1.0};
-            for(int lVertex=0; lVertex<kVertex-1; lVertex++){
+            for(int lVertex = 0; lVertex <= kVertex-1; lVertex++){//index shift right one
                 double edge_equation = 1.0 - A[vertexIndexSubset[jVertex][lVertex]]*xp[0] - B[vertexIndexSubset[jVertex][lVertex]]*xp[1];
                 product[0] *= edge_equation;
                 product[1] *= edge_equation;
             }
             product[0] *= -A[vertexIndexSubset[jVertex][kVertex]];
             product[1] *= -B[vertexIndexSubset[jVertex][kVertex]];
-            for(int lVertex = kVertex; lVertex < nEdgesOnCellSubset[jVertex]; lVertex++){
-                //TODO: check the index is correct or not
+            for(int lVertex = kVertex+1; lVertex < nEdgesOnCellSubset[jVertex]; lVertex++){
                 double edge_equation = 1.0 - A[vertexIndexSubset[jVertex][lVertex]]*xp[0] - B[vertexIndexSubset[jVertex][lVertex]]*xp[1];
                 product[0] *= edge_equation;
                 product[1] *= edge_equation;
@@ -618,13 +627,19 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
             product_sum[0] += product[0];
             product_sum[1] += product[1];
         }
-        derivative[jVertex] = Vector2(product_sum[0]*kappa[jVertex][iVertex],product_sum[1]*kappa[jVertex][iVertex]);
+        derivative[jVertex][0] = product_sum[0]*kappa[jVertex][iVertex];
+        derivative[jVertex][1] = product_sum[1]*kappa[jVertex][iVertex];
+        // error here
+        // ERROR SOLVED 2/20 yg
+        //if(numVerti == 7)
+        //    printf("%d:%f,%f\n",jVertex,derivative[jVertex][0],derivative[jVertex][1]);
         derivatives_sum[0] += product_sum[0]*kappa[jVertex][iVertex];
         derivatives_sum[1] += product_sum[1]*kappa[jVertex][iVertex];
         }
         phi[iVertex] = numerator[iVertex]/denominator;
         gradientPhi[iVertex] = Vector2(derivative[iVertex][0]/denominator-(numerator[iVertex]/(denominator*denominator))*derivatives_sum[0],derivative[iVertex][1]/denominator-(numerator[iVertex]/(denominator*denominator))*derivatives_sum[1]);              
-    }  
+   }  
+//======================*/ 
 }
 
 
