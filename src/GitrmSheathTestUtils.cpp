@@ -799,7 +799,8 @@ void Particles::interpolateWachpress(){
                 gradFByHeightAtP = Vector2(gradFByHeightAtP[0] + Fi*gradWByHeight[i][0],gradFByHeightAtP[1] + Fi*gradWByHeight[i][1]);
                 gradFMPASAtP = Vector2(gradFMPASAtP[0] + Fi*gradWMPAS[i][0],gradFMPASAtP[1] + Fi*gradWMPAS[i][1]);
 	        wp_coordByArea = wp_coordByArea + v[i]*wByArea[i]; 
-	        wp_coordByGradient = wp_coordByGradient + v[i]*wByHeight[i];  
+	        wp_coordByGradient = wp_coordByGradient + v[i]*wByHeight[i]; 
+                //printf("%2d:wByHeight= %f | wMPAS= %f\n",iel, wByHeight[i], wMPAS[i]); 
             }   
                 //print AtP[0]  AtP[1]
                 //check 10.36   12.2

@@ -548,26 +548,62 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
         int i2 = iVertex+1;
         kappa[iVertex-1] = kappa[iVertex-2]*(A[i2-1]*(v[i0][0]-v[i1][0])+B[i2-1]*(v[i0][1]-v[i1][1]))/ (A[i0-1]*(v[i1][0]-v[i0][0])+B[i0-1]*(v[i1][1]-v[i0][1]));
     }
-
-    double n[maxVerti];
-    double nSum = 0.0;
-    for(int i=0; i< numVerti; i++){
-        n[i] = kappa[i];
-        for(int j=0; j< numVerti; j++){
-            int index = (i+j+2)%numVerti;
-            n[i] *= 1 - a[j]*xp[0] - b[j]*xp[1];
-        }
-        nSum += n[i];
-    }
-    double ndx[maxVerti];
-    double ndy[maxVerti];
-    
     /*==checked 
     if(numVerti == 7){
         for(int iVertex=0; iVertex<numVerti; iVertex++){
             printf("%d:%f \n",iVertex, kappa[iVertex]);
         }
     }//==*/
+
+    double n[maxVerti] = {1.0};
+    double nSum = 0.0;
+    for(int i=0; i< numVerti; i++){
+        n[i] = kappa[i];
+        for(int j=0; j< numVerti; j++){
+            int index = (i+j+2)%numVerti;
+            n[i] *= 1 - A[index]*xp[0] - B[index]*xp[1];
+        }
+        nSum += n[i];
+    }
+
+    double ndx[maxVerti] = {0.0};
+    double ndy[maxVerti] = {0.0};
+    initArrayWith(ndx,maxVerti,0.0);
+    initArrayWith(ndy,maxVerti,0.0);
+    double ndxSum = 0.0;
+    double ndySum = 0.0;
+    
+    for(int i = 0; i<numVerti; i++){
+        for(int j = 0;j<numVerti-2; j++){
+            int index1 = (i+j+2)%numVerti;
+            double productX = 1.0;
+            double productY = 1.0;
+            for(int k = 0; k<numVerti-2; k++){
+                int index2 = (i+k+2)%numVerti;
+                if(index1 == index2){
+                    productX *= -A[index2];
+                    productY *= -B[index2];
+                    continue;
+                }
+                double equation = 1 -A[index2]*xp[0] -B[index2]*xp[1];
+                productX *= equation;     
+                productY *= equation;
+            }
+            ndx[i] += productX;
+            ndy[i] += productY;
+        }
+        ndx[i] *= kappa[i];
+        ndy[i] *= kappa[i];
+        ndxSum += ndx[i];
+        ndySum += ndy[i];
+    }
+
+    for(int i=0; i<numVerti; i++){
+        phi[i] = n[i]/nSum;
+        gradientPhi[i] = Vector2(ndx[i]/ndxSum,ndy[i]/ndySum);
+    }
+    
+    
 
 /*  deleted
     int nEdgesOnCellSubset[maxVerti];
