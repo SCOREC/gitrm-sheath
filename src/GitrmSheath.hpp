@@ -599,8 +599,8 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
     }
 
     for(int i=0; i<numVerti; i++){
-        phi[i] = n[i]/nSum;
-        gradientPhi[i] = Vector2(ndx[i]/ndxSum,ndy[i]/ndySum);
+        phi[i] = n[i]/nSum;// the phi is not correct
+        gradientPhi[i] = Vector2(ndx[i]/nSum-n[i]/(nSum*nSum)*ndxSum,ndy[i]/nSum-n[i]/(nSum*nSum)*ndySum);
     }
     
     
