@@ -537,6 +537,13 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
         A[iVertex-1] = (v[i2][1]-v[i1][1])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
         B[iVertex-1] = (v[i1][0]-v[i2][0])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
         //if(numVerti == 7) //checked
+            // 1.28205128205128    0.384615384615385
+            // 0.873015873015873   0.793650793650794
+            // 0.519480519480519   1.29870129870130
+            // -0.689655172413791  3.44827586206896
+            // 3.19999999999999    -3.99999999999999
+            // 1                   0
+            // 0                   1
         //    printf("(%f,%f)|%d: A= %6.3f, B= %6.3f\n",xp[0],xp[1],iVertex-1, A[iVertex-1], B[iVertex-1]);   
     }
     A[numVerti] = A[0];
@@ -549,6 +556,13 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
         kappa[iVertex-1] = kappa[iVertex-2]*(A[i2-1]*(v[i0][0]-v[i1][0])+B[i2-1]*(v[i0][1]-v[i1][1]))/ (A[i0-1]*(v[i1][0]-v[i0][0])+B[i0-1]*(v[i1][1]-v[i0][1]));
     }
     /*==checked 
+    //1
+    //1.05834464043419
+    //3.94142141954802
+    //-12.1395779722079
+    //5.86746268656715
+    //1.46686567164179
+    //-1.88059701492537
     if(numVerti == 7){
         for(int iVertex=0; iVertex<numVerti; iVertex++){
             printf("%d:%f \n",iVertex, kappa[iVertex]);
@@ -556,15 +570,22 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
     }//==*/
 
     double n[maxVerti] = {1.0};
+    initArrayWith(n,maxVerti,1.0);
     double nSum = 0.0;
     for(int i=0; i< numVerti; i++){
-        n[i] = kappa[i];
-        for(int j=0; j< numVerti; j++){
+        for(int j=0; j< numVerti-2; j++){
             int index = (i+j+2)%numVerti;
-            n[i] *= 1 - A[index]*xp[0] - B[index]*xp[1];
+            double edge = 1 - A[index]*xp[0] - B[index]*xp[1];
+            n[i] *= edge;
+            //if(numVerti == 7)
+            //    printf("(%d,%d): %.4f\n",i,index,n[i]);
         }
+        n[i] *= kappa[i];
         nSum += n[i];
     }
+    //if(numVerti == 7){
+    //    printf("n=%3f,%3f,%3f,%3f,%3f,%3f,%3f|nSum=%f\n",n[0],n[1],n[2],n[3],n[4],n[5],n[6],nSum);
+    //}
 
     double ndx[maxVerti] = {0.0};
     double ndy[maxVerti] = {0.0};
@@ -597,6 +618,10 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
         ndxSum += ndx[i];
         ndySum += ndy[i];
     }
+
+    //if(numVerti == 3){
+    //    printf("ndx=%f,%f,%f|ndy=%f,%f,%f|ndxSum=%f,ndySum=%f\n",ndx[0],ndx[1],ndx[2],ndy[0],ndy[1],ndy[2],ndxSum,ndySum);
+    //}
 
     for(int i=0; i<numVerti; i++){
         phi[i] = n[i]/nSum;// the phi is not correct
