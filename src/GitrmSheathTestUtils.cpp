@@ -754,16 +754,20 @@ void Particles::interpolateWachpress(){
             Vector2 v[maxVerti+1] = {nodes(conn(iel,1))};
             //std::array<Vector2,maxVerti+1> v;
             initArrayWith(v,maxVerti+1,nodes(conn(iel,1)));
+            Vector2 vMPAS[maxVerti+2] = {nodes(conn(iel,1))};
             int numEverts = conn(iel,0);
             for(int i = 1; i<=numEverts; i++){
                 v[i-1] = nodes(conn(iel,i)-1);
+                vMPAS[i] = nodes(conn(iel,i)-1);
                 //if(numEverts == 7)
                 //    printf("%f %f\n",v[i-1][0],v[i-1][1]);
             }
             //printf("xp:%f,%f:\n",xp(ipart)[0],xp(ipart)[1]);
             //1 2 ... n 1
             v[numEverts] = nodes(conn(iel,1)-1);
-
+            //n 1 2 ... n 1
+            vMPAS[numEverts+1] = nodes(conn(iel,1)-1);
+            vMPAS[0] = vMPAS[numEverts];
             //getWachpressCoeffs(xp(ipart), numEverts, v, w);
             //if(numEverts != maxVerti){
             //    for(int i = numEverts+1; i<maxVerti+1; i++ ){
@@ -783,7 +787,7 @@ void Particles::interpolateWachpress(){
             
             double wMPAS[maxVerti] = {0.0};
             Vector2 gradWMPAS[maxVerti];
-            gradientMPAS(xp(ipart), numEverts, v, wMPAS, gradWMPAS);
+            gradientMPAS(xp(ipart), numEverts, vMPAS, wMPAS, gradWMPAS);
 
             Vector2 wp_coordByArea(0,0);
             Vector2 wp_coordByGradient(0,0);
@@ -799,7 +803,7 @@ void Particles::interpolateWachpress(){
             }   
                 //print AtP[0]  AtP[1]
                 //check 10.36   12.2
-                printf("%2d:gradFByHeightAtP= (%6.3f,%6.3f) |gradFMPAS= (%6.3f,%6.3f)\n",iel,gradFByHeightAtP[0],gradFByHeightAtP[1],gradFMPASAtP[0],gradFMPASAtP[1]);
+                //printf("%2d:gradFByHeightAtP= (%6.3f,%6.3f) |gradFMPAS= (%6.3f,%6.3f)\n",iel,gradFByHeightAtP[0],gradFByHeightAtP[1],gradFMPASAtP[0],gradFMPASAtP[1]);
             
             //if(iel%11 == 0){
             //printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e) wpByArea:(%1.3e,%1.3e) wpByGradient:(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coordByArea[0],wp_coordByArea[1],wp_coordByGradient[0],wp_coordByGradient[1]);
