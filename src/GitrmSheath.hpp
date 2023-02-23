@@ -558,21 +558,11 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
     for(int iVertex=1; iVertex<numVerti+1; iVertex++){
         int i1 = iVertex -1;
         int i2 = iVertex;
-        //if(i1<0)
-        //    i1 = numVerti-1;
        
+        // 0 = 1 -A[i]*x -B[i]*y (22)
         // cant solve the line through the origion 
         A[iVertex-1] = (v[i2][1]-v[i1][1])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
         B[iVertex-1] = (v[i1][0]-v[i2][0])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
-        //if(numVerti == 7) //checked
-            // 1.28205128205128    0.384615384615385
-            // 0.873015873015873   0.793650793650794
-            // 0.519480519480519   1.29870129870130
-            // -0.689655172413791  3.44827586206896
-            // 3.19999999999999    -3.99999999999999
-            // 1                   0
-            // 0                   1
-        //    printf("(%f,%f)|%d: A= %6.3f, B= %6.3f\n",xp[0],xp[1],iVertex-1, A[iVertex-1], B[iVertex-1]);   
     }
     A[numVerti] = A[0];
     B[numVerti] = B[0];
@@ -581,21 +571,9 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
         int i0 = iVertex-1;
         int i1 = iVertex;
         int i2 = iVertex+1;
+        // kappa equation (21)
         kappa[iVertex-1] = kappa[iVertex-2]*(A[i2-1]*(v[i0][0]-v[i1][0])+B[i2-1]*(v[i0][1]-v[i1][1]))/ (A[i0-1]*(v[i1][0]-v[i0][0])+B[i0-1]*(v[i1][1]-v[i0][1]));
     }
-    /*==checked 
-    //1
-    //1.05834464043419
-    //3.94142141954802
-    //-12.1395779722079
-    //5.86746268656715
-    //1.46686567164179
-    //-1.88059701492537
-    if(numVerti == 7){
-        for(int iVertex=0; iVertex<numVerti; iVertex++){
-            printf("%d:%f \n",iVertex, kappa[iVertex]);
-        }
-    }//==*/
 
     double n[maxVerti];
     initArrayWith(n,maxVerti,1.0);
@@ -607,7 +585,6 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
     initArrayWith(ndy,maxVerti,0.0);
     double ndxSum = 0.0;
     double ndySum = 0.0;
-    
     for(int i = 0; i<numVerti; i++){
         for(int j = 0;j<numVerti-2; j++){
             int index1 = (i+j+2)%numVerti;
@@ -640,99 +617,11 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
         ndySum += ndy[i];
     }
 
-    //if(numVerti == 3){
-    //    printf("ndx=%f,%f,%f|ndy=%f,%f,%f|ndxSum=%f,ndySum=%f\n",ndx[0],ndx[1],ndx[2],ndy[0],ndy[1],ndy[2],ndxSum,ndySum);
-    //}
 
     for(int i=0; i<numVerti; i++){
-        phi[i] = n[i]/nSum;// the phi is not correct
+        phi[i] = n[i]/nSum;
         gradientPhi[i] = Vector2(ndx[i]/nSum-n[i]/(nSum*nSum)*ndxSum,ndy[i]/nSum-n[i]/(nSum*nSum)*ndySum);
-    }
-    
-    
-
-/*  deleted
-    int nEdgesOnCellSubset[maxVerti];
-    int vertexIndexSubset[maxVerti][maxVerti] = {0};
-    
-    //XXX: to eliminate the if 
-    int ilist[maxVerti] = {1,2,3,4,5,6,7,0};
-    ilist[numVerti-1] = 0;
-        
-    for(int jVertex=0; jVertex<numVerti; jVertex++){
-        int i1 = jVertex;
-        int i2 = ilist[jVertex];
-        
-        nEdgesOnCellSubset[jVertex] = 0;
-
-        for(int kVertex=0; kVertex<numVerti; kVertex++){
-            if(kVertex!=i1 && kVertex!=i2){
-                nEdgesOnCellSubset[jVertex] = nEdgesOnCellSubset[jVertex]+1;
-                vertexIndexSubset[jVertex][nEdgesOnCellSubset[jVertex]-1] = kVertex;
-            }
-            //if(nEdgesOnCellSubset[jVertex] != 0)
-            //    --nEdgesOnCellSubset[jVertex]; 
-            //if(vertexIndexSubset[jVertex][nEdgesOnCellSubset[jVertex]] != 0)
-            //    --vertexIndexSubset[jVertex][nEdgesOnCellSubset[jVertex]];
-        }    
-    } 
-
-    //check the above two nE vI
-    //CORRECT CHECKED
-    //if(numVerti == 7){
-    //    int index = 6;
-    //    printf("%d|%d,%d,%d,%d,%d,%d,%d\n",nEdgesOnCellSubset[index],vertexIndexSubset[index][0],vertexIndexSubset[index][1],vertexIndexSubset[index][2],vertexIndexSubset[index][3],vertexIndexSubset[index][4],vertexIndexSubset[index][5],vertexIndexSubset[index][6]);
-    //}
-//
-    for(int iVertex=0; iVertex<numVerti; iVertex++){
-        double numerator[maxVerti];
-        initArrayWith(numerator,maxVerti,1.0);
-        double denominator = 0.0;
-        double derivative[maxVerti][2];
-        double derivatives_sum[2] = {0.0,0.0};
-        for(int jVertex=0; jVertex<numVerti; jVertex++){
-            for(int kVertex=0; kVertex< nEdgesOnCellSubset[jVertex];kVertex++){
-                double edge_equation = 1.0 -A[vertexIndexSubset[jVertex][kVertex]]*xp[0] - B[vertexIndexSubset[jVertex][kVertex]]*xp[1];
-                numerator[jVertex] *= edge_equation;
-            }
-        numerator[jVertex] *= kappa[jVertex][iVertex];
-        // error occur 
-        // numerator calc not correct
-        //if(numVerti == 7) 
-        //    printf("%d:%f\n",jVertex,numerator[jVertex]);
-        //ERROR SOLVED 2/20 yg
-        denominator += numerator[jVertex];
-        double product_sum[2] = {0.0,0.0};
-        for(int kVertex=0; kVertex<nEdgesOnCellSubset[jVertex]; kVertex++){
-            double product[2] = {1.0,1.0};
-            for(int lVertex = 0; lVertex <= kVertex-1; lVertex++){//index shift right one
-                double edge_equation = 1.0 - A[vertexIndexSubset[jVertex][lVertex]]*xp[0] - B[vertexIndexSubset[jVertex][lVertex]]*xp[1];
-                product[0] *= edge_equation;
-                product[1] *= edge_equation;
-            }
-            product[0] *= -A[vertexIndexSubset[jVertex][kVertex]];
-            product[1] *= -B[vertexIndexSubset[jVertex][kVertex]];
-            for(int lVertex = kVertex+1; lVertex < nEdgesOnCellSubset[jVertex]; lVertex++){
-                double edge_equation = 1.0 - A[vertexIndexSubset[jVertex][lVertex]]*xp[0] - B[vertexIndexSubset[jVertex][lVertex]]*xp[1];
-                product[0] *= edge_equation;
-                product[1] *= edge_equation;
-            }
-            product_sum[0] += product[0];
-            product_sum[1] += product[1];
-        }
-        derivative[jVertex][0] = product_sum[0]*kappa[jVertex][iVertex];
-        derivative[jVertex][1] = product_sum[1]*kappa[jVertex][iVertex];
-        // error here
-        // ERROR SOLVED 2/20 yg
-        //if(numVerti == 7)
-        //    printf("%d:%f,%f\n",jVertex,derivative[jVertex][0],derivative[jVertex][1]);
-        derivatives_sum[0] += product_sum[0]*kappa[jVertex][iVertex];
-        derivatives_sum[1] += product_sum[1]*kappa[jVertex][iVertex];
-        }
-        phi[iVertex] = numerator[iVertex]/denominator;
-        gradientPhi[iVertex] = Vector2(derivative[iVertex][0]/denominator-(numerator[iVertex]/(denominator*denominator))*derivatives_sum[0],derivative[iVertex][1]/denominator-(numerator[iVertex]/(denominator*denominator))*derivatives_sum[1]);              
-   }  
-//======================*/ 
+    }    
 }
 
 

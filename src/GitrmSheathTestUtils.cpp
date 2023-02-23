@@ -779,21 +779,20 @@ void Particles::interpolateWachpress(){
             //TODO: timing byarea and bympas
             double wByArea[maxVerti] = {0.0};
             Vector2 gradWByArea[maxVerti];
-            //printf("test%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",wByArea[0],wByArea[1],wByArea[2],wByArea[3],wByArea[4],wByArea[5],wByArea[6],wByArea[7]);
-            //std::array<double,maxVerti> wByArea;
             initArrayWith(wByArea,maxVerti,0.0);
             getWachpressCoeffsByArea(xp(ipart), numEverts, v, wByArea, gradWByArea);
             
             double wByHeight[maxVerti] = {0.0};
             Vector2 gradWByHeight[maxVerti];
             gradientByHeight(xp(ipart), numEverts, v, wByHeight, gradWByHeight);
-            //gradient(v[0], numEverts, v, wByHeight, gradWByHeight);
+            gradient(v[0], numEverts, v, wByHeight, gradWByHeight);
             
             double wMPAS[maxVerti] = {0.0};
             Vector2 gradWMPAS[maxVerti];
             gradientMPAS(xp(ipart), numEverts, vMPAS, wMPAS, gradWMPAS);
-            //gradientMPAS(v[0], numEverts, vMPAS, wMPAS, gradWMPAS);
+            gradientMPAS(v[0], numEverts, vMPAS, wMPAS, gradWMPAS);
 
+///* answer check
             Vector2 wp_coordByArea(0,0);
             Vector2 wp_coordByGradient(0,0);
 
@@ -816,7 +815,7 @@ void Particles::interpolateWachpress(){
             //if(iel%11 == 0){
             //printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e) wpByArea:(%1.3e,%1.3e) wpByGradient:(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coordByArea[0],wp_coordByArea[1],wp_coordByGradient[0],wp_coordByGradient[1]);
             //}
-
+//==============================================*/
         }
     });
 }
