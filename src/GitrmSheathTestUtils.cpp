@@ -777,22 +777,21 @@ void Particles::interpolateWachpress(){
             
 
             //TODO: timing byarea and bympas
-            double wByArea[maxVerti] = {0.0};
-            Vector2 gradWByArea[maxVerti];
-            initArrayWith(wByArea,maxVerti,0.0);
-            getWachpressCoeffsByArea(xp(ipart), numEverts, v, wByArea, gradWByArea);
+            //double wByArea[maxVerti] = {0.0};
+            //Vector2 gradWByArea[maxVerti];
+            //getWachpressCoeffsByArea(xp(ipart), numEverts, v, wByArea, gradWByArea);
             
-            double wByHeight[maxVerti] = {0.0};
-            Vector2 gradWByHeight[maxVerti];
-            gradientByHeight(xp(ipart), numEverts, v, wByHeight, gradWByHeight);
-            gradient(v[0], numEverts, v, wByHeight, gradWByHeight);
+            //double wByHeight[maxVerti] = {0.0};
+            //Vector2 gradWByHeight[maxVerti];
+            //gradientByHeight(xp(ipart), numEverts, v, wByHeight, gradWByHeight);
+                //gradient(v[0], numEverts, v, wByHeight, gradWByHeight);
             
             double wMPAS[maxVerti] = {0.0};
             Vector2 gradWMPAS[maxVerti];
             gradientMPAS(xp(ipart), numEverts, vMPAS, wMPAS, gradWMPAS);
-            gradientMPAS(v[0], numEverts, vMPAS, wMPAS, gradWMPAS);
+                //gradientMPAS(v[0], numEverts, vMPAS, wMPAS, gradWMPAS);
 
-///* answer check
+/* answer check
             Vector2 wp_coordByArea(0,0);
             Vector2 wp_coordByGradient(0,0);
 
@@ -810,7 +809,7 @@ void Particles::interpolateWachpress(){
             }   
                 //print AtP[0]  AtP[1]
                 //check 10.36   12.2
-                //printf("gradF%2d:Area= (%6.3f,%6.3f) |Height= (%6.3f,%6.3f) |MPAS= (%6.3f,%6.3f)\n",iel,gradFByAreaAtP[0],gradFByAreaAtP[1],gradFByHeightAtP[0],gradFByHeightAtP[1],gradFMPASAtP[0],gradFMPASAtP[1]);
+                printf("gradF%2d:Area= (%6.3f,%6.3f) |Height= (%6.3f,%6.3f) |MPAS= (%6.3f,%6.3f)\n",iel,gradFByAreaAtP[0],gradFByAreaAtP[1],gradFByHeightAtP[0],gradFByHeightAtP[1],gradFMPASAtP[0],gradFMPASAtP[1]);
             
             //if(iel%11 == 0){
             //printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e) wpByArea:(%1.3e,%1.3e) wpByGradient:(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coordByArea[0],wp_coordByArea[1],wp_coordByGradient[0],wp_coordByGradient[1]);

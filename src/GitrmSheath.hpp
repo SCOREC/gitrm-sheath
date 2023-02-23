@@ -409,8 +409,9 @@ void getWachpressCoeffsByArea(Vector2 xp,
     }
     
     for(int i = 0; i<numVerti; i++){
-        phi[i] = w[i]/wSum;
-        gradientPhi[i] = Vector2(wdx[i]/wSum-w[i]/(wSum*wSum)*wdxSum, wdy[i]/wSum-w[i]/(wSum*wSum)*wdySum);
+        double wSumInv = 1.0/wSum;
+        phi[i] = w[i]*wSumInv;
+        gradientPhi[i] = Vector2(wdx[i]*wSumInv-w[i]*wSumInv*wSumInv*wdxSum, wdy[i]*wSumInv-w[i]*wSumInv*wSumInv*wdySum);
         //if(numVerti == 3){
         //    printf("w[%d],wSum = %.3f, %.3f \n",i, w[i], wSum);
         //}
@@ -619,8 +620,9 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
 
 
     for(int i=0; i<numVerti; i++){
-        phi[i] = n[i]/nSum;
-        gradientPhi[i] = Vector2(ndx[i]/nSum-n[i]/(nSum*nSum)*ndxSum,ndy[i]/nSum-n[i]/(nSum*nSum)*ndySum);
+        double nSumInv = 1.0/nSum;
+        phi[i] = n[i]*nSumInv;
+        gradientPhi[i] = Vector2(ndx[i]*nSumInv-n[i]*nSumInv*nSumInv*ndxSum,ndy[i]*nSumInv-n[i]*nSumInv*nSumInv*ndySum);
     }    
 }
 
