@@ -345,7 +345,8 @@ KOKKOS_INLINE_FUNCTION
 void getWachpressCoeffsByArea(Vector2 xp,
                               int numVerti,
 			      Vector2* v, 
-                              double* l){
+                              double* phi,
+                              Vector2* gradientPhi){
     Vector2 e[maxVerti+1];
     Vector2 p[maxVerti];
     double w[maxVerti];
@@ -370,19 +371,45 @@ void getWachpressCoeffsByArea(Vector2 xp,
        // printf("c: %.3f, a: %.3f\n",c[i],a[i]);
     }
     double wSum = 0.0;
+    
+    double wdx[maxVerti];
+    double wdy[maxVerti];
+    initArrayWith(wdx,maxVerti,0.0);
+    initArrayWith(wdy,maxVerti,0.0);
+    double wdxSum = 0.0;
+    double wdySum = 0.0;
     for(int i = 0; i<numVerti; i++){
         double aProduct = 1.0;
         for(int j = 0;j<numVerti-2; j++){
-            //if(i == j or i-1 == j) aProduct /= a[j];
-            aProduct *= a[(j+i+1)%numVerti];// each vertex goes to vertexNumber(i)-2
-            //printf("numVerti: %d,i: %d, j: %d, i+j+1|numVerti: %d\n", numVerti, i, j,(i+j+1)%numVerti);
+            int index1 = (j+i+1)%numVerti;
+            aProduct *= a[index1];
+            
+            double productX = 1.0;
+            double productY = 1.0;
+            for(int k = 0; k<numVerti-2; k++){
+                int index2 = (i+k+1)%numVerti;
+                if(index1 == index2){
+                    productX *= p[index1][0];
+                    productY *= p[index1][1];
+                    continue;
+                }
+                productX *= a[index2];
+                productY *= a[index2];
+            }       
+            wdx[i] += productX;
+            wdy[i] += productY;
         }
+        wdx[i] *= c[i];
+        wdy[i] *= c[i];
+        wdxSum += wdx[i];
+        wdySum += wdy[i];
         w[i] = c[i] * aProduct;
         wSum += w[i];
     }
     //*/
     for(int i = 0; i<numVerti; i++){
-        l[i] = w[i]/wSum;
+        phi[i] = w[i]/wSum;
+        gradientPhi[i] = Vector2(wdx[i]/wSum-w[i]/(wSum*wSum)*wdxSum, wdy[i]/wSum-w[i]/(wSum*wSum)*wdySum);
         //if(numVerti == 3){
         //    printf("w[%d],wSum = %.3f, %.3f \n",i, w[i], wSum);
         //}
