@@ -350,7 +350,6 @@ void getWachpressCoeffsByArea(Vector2 xp,
     Vector2 e[maxVerti+1];
     Vector2 p[maxVerti];
     double w[maxVerti];
-    ///*
     for(int i = 0; i<numVerti; i++){
         e[i+1] = v[i+1] -v[i];
         //if(numVerti == 3){
@@ -386,16 +385,18 @@ void getWachpressCoeffsByArea(Vector2 xp,
             
             double productX = 1.0;
             double productY = 1.0;
-            for(int k = 0; k<numVerti-2; k++){
+            for(int k = 0; k<j; k++){
                 int index2 = (i+k+1)%numVerti;
-                if(index1 == index2){
-                    productX *= p[index1][0];
-                    productY *= p[index1][1];
-                    continue;
-                }
                 productX *= a[index2];
                 productY *= a[index2];
-            }       
+            }    
+            productX *= -(v[index1+1][1]-v[index1][1]);
+            productY *= v[index1+1][0]-v[index1][0];
+            for(int k = j+1; k<numVerti-2; k++){
+                int index2 = (i+k+1)%numVerti;
+                productX *= a[index2];
+                productY *= a[index2];
+            }   
             wdx[i] += productX;
             wdy[i] += productY;
         }
@@ -406,7 +407,7 @@ void getWachpressCoeffsByArea(Vector2 xp,
         w[i] = c[i] * aProduct;
         wSum += w[i];
     }
-    //*/
+    
     for(int i = 0; i<numVerti; i++){
         phi[i] = w[i]/wSum;
         gradientPhi[i] = Vector2(wdx[i]/wSum-w[i]/(wSum*wSum)*wdxSum, wdy[i]/wSum-w[i]/(wSum*wSum)*wdySum);
@@ -417,7 +418,7 @@ void getWachpressCoeffsByArea(Vector2 xp,
 }
 
 KOKKOS_INLINE_FUNCTION
-void gradient(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gradientPhi){
+void gradientByHeight(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gradientPhi){
     Vector2 e[maxVerti+1];
     Vector2 p[maxVerti+1];
     for(int i = 0; i<numVerti; i++){
@@ -560,7 +561,7 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
         //if(i1<0)
         //    i1 = numVerti-1;
        
-        // cant solve the xy axis line 
+        // cant solve the line through the origion 
         A[iVertex-1] = (v[i2][1]-v[i1][1])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
         B[iVertex-1] = (v[i1][0]-v[i2][0])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
         //if(numVerti == 7) //checked
@@ -596,26 +597,12 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
         }
     }//==*/
 
-    double n[maxVerti] = {1.0};
+    double n[maxVerti];
     initArrayWith(n,maxVerti,1.0);
     double nSum = 0.0;
-    for(int i=0; i< numVerti; i++){
-        for(int j=0; j< numVerti-2; j++){
-            int index = (i+j+2)%numVerti;
-            double edge = 1 - A[index]*xp[0] - B[index]*xp[1];
-            n[i] *= edge;
-            //if(numVerti == 7)
-            //    printf("(%d,%d): %.4f\n",i,index,n[i]);
-        }
-        n[i] *= kappa[i];
-        nSum += n[i];
-    }
-    //if(numVerti == 7){
-    //    printf("n=%3f,%3f,%3f,%3f,%3f,%3f,%3f|nSum=%f\n",n[0],n[1],n[2],n[3],n[4],n[5],n[6],nSum);
-    //}
 
-    double ndx[maxVerti] = {0.0};
-    double ndy[maxVerti] = {0.0};
+    double ndx[maxVerti];
+    double ndy[maxVerti];
     initArrayWith(ndx,maxVerti,0.0);
     initArrayWith(ndy,maxVerti,0.0);
     double ndxSum = 0.0;
@@ -624,15 +611,20 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
     for(int i = 0; i<numVerti; i++){
         for(int j = 0;j<numVerti-2; j++){
             int index1 = (i+j+2)%numVerti;
+            double edge = 1 - A[index1]*xp[0] - B[index1]*xp[1];
+            n[i] *= edge;
             double productX = 1.0;
             double productY = 1.0;
-            for(int k = 0; k<numVerti-2; k++){
+            for(int k = 0; k<j; k++){
                 int index2 = (i+k+2)%numVerti;
-                if(index1 == index2){
-                    productX *= -A[index2];
-                    productY *= -B[index2];
-                    continue;
-                }
+                double equation = 1 -A[index2]*xp[0] -B[index2]*xp[1];
+                productX *= equation;     
+                productY *= equation;   
+            }
+            productX *= -A[index1];
+            productY *= -B[index1];
+            for(int k = j+1; k<numVerti-2; k++){
+                int index2 = (i+k+2)%numVerti;
                 double equation = 1 -A[index2]*xp[0] -B[index2]*xp[1];
                 productX *= equation;     
                 productY *= equation;
@@ -640,6 +632,8 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
             ndx[i] += productX;
             ndy[i] += productY;
         }
+        n[i] *= kappa[i];
+        nSum += n[i];
         ndx[i] *= kappa[i];
         ndy[i] *= kappa[i];
         ndxSum += ndx[i];
