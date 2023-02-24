@@ -554,7 +554,9 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
     // v change to n 1 2 ... n 1 loop style
     double A[maxVerti+1];
     double B[maxVerti+1];
-    double kappa[maxVerti] = {1};
+    double kappa[maxVerti];
+    kappa[0] = 1.0;
+    double l[maxVerti];
     
     for(int iVertex=1; iVertex<numVerti+1; iVertex++){
         int i1 = iVertex -1;
@@ -562,8 +564,10 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
        
         // 0 = 1 -A[i]*x -B[i]*y (22)
         // cant solve the line through the origion 
-        A[iVertex-1] = (v[i2][1]-v[i1][1])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
-        B[iVertex-1] = (v[i1][0]-v[i2][0])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
+        A[i1] = (v[i2][1]-v[i1][1])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
+        B[i1] = (v[i1][0]-v[i2][0])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
+    
+        l[i1] = 1 -A[i1]*xp[0] -B[i1]*xp[1];
     }
     A[numVerti] = A[0];
     B[numVerti] = B[0];
@@ -591,23 +595,20 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
     for(int i = 0; i<numVerti; i++){
         for(int j = 0;j<numVerti-2; j++){
             int index1 = (i+j+2)%numVerti;
-            double edge = 1 - A[index1]*xp[0] - B[index1]*xp[1];
-            n[i] *= edge;
+            n[i] *= l[index1];
             double productX = 1.0;
             double productY = 1.0;
             for(int k = 0; k<j; k++){
                 int index2 = (i+k+2)%numVerti;
-                double equation = 1 -A[index2]*xp[0] -B[index2]*xp[1];
-                productX *= equation;     
-                productY *= equation;   
+                productX *= l[index2];     
+                productY *= l[index2];   
             }
             productX *= -A[index1];
             productY *= -B[index1];
             for(int k = j+1; k<numVerti-2; k++){
                 int index2 = (i+k+2)%numVerti;
-                double equation = 1 -A[index2]*xp[0] -B[index2]*xp[1];
-                productX *= equation;     
-                productY *= equation;
+                productX *= l[index2];     
+                productY *= l[index2];
             }
             ndx[i] += productX;
             ndy[i] += productY;
