@@ -408,8 +408,8 @@ void getWachpressCoeffsByArea(Vector2 xp,
         wSum += w[i];
     }
     
+    double wSumInv = 1.0/wSum;
     for(int i = 0; i<numVerti; i++){
-        double wSumInv = 1.0/wSum;
         phi[i] = w[i]*wSumInv;
         gradientPhi[i] = Vector2(wdx[i]*wSumInv-w[i]*wSumInv*wSumInv*wdxSum, wdy[i]*wSumInv-w[i]*wSumInv*wSumInv*wdySum);
         //if(numVerti == 3){
@@ -569,11 +569,13 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
     B[numVerti] = B[0];
     
     for(int iVertex=2; iVertex<numVerti+1;iVertex++){
+        int im1 = iVertex-2;
         int i0 = iVertex-1;
         int i1 = iVertex;
-        int i2 = iVertex+1;
+        //int i2 = iVertex+1;
         // kappa equation (21)
-        kappa[iVertex-1] = kappa[iVertex-2]*(A[i2-1]*(v[i0][0]-v[i1][0])+B[i2-1]*(v[i0][1]-v[i1][1]))/ (A[i0-1]*(v[i1][0]-v[i0][0])+B[i0-1]*(v[i1][1]-v[i0][1]));
+        // the index is due to the shift in v[] which affect thh A[] and B[] index
+        kappa[i0] = kappa[im1]*(A[i1]*(v[i0][0]-v[i1][0])+B[i1]*(v[i0][1]-v[i1][1]))/ (A[im1]*(v[i1][0]-v[i0][0])+B[im1]*(v[i1][1]-v[i0][1]));
     }
 
     double n[maxVerti];
@@ -619,8 +621,8 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
     }
 
 
+    double nSumInv = 1.0/nSum;
     for(int i=0; i<numVerti; i++){
-        double nSumInv = 1.0/nSum;
         phi[i] = n[i]*nSumInv;
         gradientPhi[i] = Vector2(ndx[i]*nSumInv-n[i]*nSumInv*nSumInv*ndxSum,ndy[i]*nSumInv-n[i]*nSumInv*nSumInv*ndySum);
     }    

@@ -777,13 +777,13 @@ void Particles::interpolateWachpress(){
             
 
             //TODO: timing byarea and bympas
-            //double wByArea[maxVerti] = {0.0};
-            //Vector2 gradWByArea[maxVerti];
-            //getWachpressCoeffsByArea(xp(ipart), numEverts, v, wByArea, gradWByArea);
+            double wByArea[maxVerti] = {0.0};
+            Vector2 gradWByArea[maxVerti];
+            getWachpressCoeffsByArea(xp(ipart), numEverts, v, wByArea, gradWByArea);
             
-            //double wByHeight[maxVerti] = {0.0};
-            //Vector2 gradWByHeight[maxVerti];
-            //gradientByHeight(xp(ipart), numEverts, v, wByHeight, gradWByHeight);
+            double wByHeight[maxVerti] = {0.0};
+            Vector2 gradWByHeight[maxVerti];
+            gradientByHeight(xp(ipart), numEverts, v, wByHeight, gradWByHeight);
                 //gradient(v[0], numEverts, v, wByHeight, gradWByHeight);
             
             double wMPAS[maxVerti] = {0.0};
