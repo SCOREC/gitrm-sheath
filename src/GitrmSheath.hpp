@@ -551,35 +551,43 @@ void gradientIntrepid(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2
 
 KOKKOS_INLINE_FUNCTION
 void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gradientPhi){
-    // v change to n 1 2 ... n 1 loop style
+    // v change to 1 2 ... n 1 loop style
     double A[maxVerti+1];
+    initArrayWith(A,maxVerti+1, 0.0);
     double B[maxVerti+1];
+    initArrayWith(B,maxVerti+1, 0.0);
     double kappa[maxVerti];
     kappa[0] = 1.0;
     double l[maxVerti];
     
-    for(int iVertex=1; iVertex<numVerti+1; iVertex++){
-        int i1 = iVertex -1;
-        int i2 = iVertex;
+    for(int iVertex=0; iVertex<numVerti; iVertex++){
+        int i1 = iVertex;
+        int i2 = iVertex+1;
        
         // 0 = 1 -A[i]*x -B[i]*y (22)
         // cant solve the line through the origion 
-        A[i1] = (v[i2][1]-v[i1][1])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
-        B[i1] = (v[i1][0]-v[i2][0])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
-    
-        l[i1] = 1 -A[i1]*xp[0] -B[i1]*xp[1];
+        A[i2] = (v[i2][1]-v[i1][1])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
+        B[i2] = (v[i1][0]-v[i2][0])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
+   
     }
-    A[numVerti] = A[0];
-    B[numVerti] = B[0];
+    A[0] = A[numVerti];
+    B[0] = B[numVerti];
     
-    for(int iVertex=2; iVertex<numVerti+1;iVertex++){
-        int im1 = iVertex-2;
-        int i0 = iVertex-1;
-        int i1 = iVertex;
-        //int i2 = iVertex+1;
+    for(int i=0; i<numVerti; i++)
+        l[i] = 1 -A[i]*xp[0] -B[i]*xp[1];
+
+    for(int iVertex=1; iVertex<numVerti;iVertex++){
+        int im1 = iVertex-1;
+        int i = iVertex;
+        int ip1 = iVertex+1;
         // kappa equation (21)
         // the index is due to the shift in v[] which affect thh A[] and B[] index
-        kappa[i0] = kappa[im1]*(A[i1]*(v[i0][0]-v[i1][0])+B[i1]*(v[i0][1]-v[i1][1]))/ (A[im1]*(v[i1][0]-v[i0][0])+B[im1]*(v[i1][1]-v[i0][1]));
+        kappa[i] = kappa[im1]*(A[ip1]*(v[im1][0]-v[i][0])+B[ip1]*(v[im1][1]-v[i][1]))/ (A[im1]*(v[i][0]-v[im1][0])+B[im1]*(v[i][1]-v[im1][1]));
+    }
+    if(numVerti == 7){
+        for(int iVertex=0; iVertex<numVerti; iVertex++){
+            printf("%d:%f \n",iVertex, kappa[iVertex]);
+        }
     }
 
     double n[maxVerti];
