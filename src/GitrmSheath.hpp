@@ -566,12 +566,16 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
        
         // 0 = 1 -A[i]*x -B[i]*y (22)
         // cant solve the line through the origion 
-        A[i2] = (v[i2][1]-v[i1][1])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
-        B[i2] = (v[i1][0]-v[i2][0])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
+        //A[i2] = (v[i2][1]-v[i1][1])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
+        //B[i2] = (v[i1][0]-v[i2][0])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
+        A[i1] = (v[i2][1]-v[i1][1])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
+        B[i1] = (v[i1][0]-v[i2][0])/(v[i1][0]*v[i2][1]-v[i2][0]*v[i1][1]); 
    
     }
-    A[0] = A[numVerti];
-    B[0] = B[numVerti];
+    //A[0] = A[numVerti];
+    //B[0] = B[numVerti];
+    A[numVerti] = A[0];
+    B[numVerti] = B[0];
     
     for(int i=0; i<numVerti; i++)
         l[i] = 1 -A[i]*xp[0] -B[i]*xp[1];
@@ -584,11 +588,12 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
         // the index is due to the shift in v[] which affect thh A[] and B[] index
         kappa[i] = kappa[im1]*(A[ip1]*(v[im1][0]-v[i][0])+B[ip1]*(v[im1][1]-v[i][1]))/ (A[im1]*(v[i][0]-v[im1][0])+B[im1]*(v[i][1]-v[im1][1]));
     }
+    ///*===print check
     if(numVerti == 7){
         for(int iVertex=0; iVertex<numVerti; iVertex++){
-            printf("%d:%f \n",iVertex, kappa[iVertex]);
+            printf("%d:A= %6.3f,B= %6.3f,kappa= %f \n",iVertex,A[iVertex],B[iVertex], kappa[iVertex]);
         }
-    }
+    }//===*/
 
     double n[maxVerti];
     initArrayWith(n,maxVerti,1.0);
