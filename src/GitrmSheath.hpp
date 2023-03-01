@@ -588,7 +588,7 @@ void gradientMPAS(Vector2 xp, int numVerti, Vector2* v, double* phi, Vector2* gr
         // the index is due to the shift in v[] which affect thh A[] and B[] index
         kappa[i] = kappa[im1]*(A[ip1]*(v[im1][0]-v[i][0])+B[ip1]*(v[im1][1]-v[i][1]))/ (A[im1]*(v[i][0]-v[im1][0])+B[im1]*(v[i][1]-v[im1][1]));
     }
-    ///*===print check
+    /*===print check
     if(numVerti == 7){
         for(int iVertex=0; iVertex<numVerti; iVertex++){
             printf("%d:A= %6.3f,B= %6.3f,kappa= %f \n",iVertex,A[iVertex],B[iVertex], kappa[iVertex]);

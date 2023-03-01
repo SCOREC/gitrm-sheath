@@ -745,7 +745,46 @@ void Particles::interpolateWachpress(){
     auto eID = getParticleElementIDs();
     auto status = getParticleStatus();
 
-    //100 1000 10000 100000 1000000 |(mem out)10000000
+    // 100 1000 10000 100000 1000000 |(mem out)10000000
+    // seperate the parallel_for  gradWByArea gradientMPAS  
+    Kokkos::parallel_for("TIME:gradWByArea",numParticles,KOKKOS_LAMBDA(const int ipart){
+        if (status(ipart)){
+            int iel = eID(ipart);
+            Vector2 v[maxVerti+1] = {nodes(conn(iel,1))};
+            initArrayWith(v,maxVerti+1,nodes(conn(iel,1)));
+            int numEverts = conn(iel,0);
+            for(int i = 1; i<=numEverts; i++){
+                v[i-1] = nodes(conn(iel,i)-1);
+            }
+            v[numEverts] = nodes(conn(iel,1)-1);
+        double wByArea[maxVerti] = {0.0};
+        Vector2 gradWByArea[maxVerti];
+        getWachpressCoeffsByArea(xp(ipart), numEverts, v, wByArea, gradWByArea);
+        }
+    });
+    // though the two parallel_for doesn't change the variables,
+    // add a fence to calc the real performance diff between the functions
+    Kokkos::fence();
+
+    Kokkos::parallel_for("TIME:gradientMPAS",numParticles,KOKKOS_LAMBDA(const int ipart){
+        if (status(ipart)){
+            int iel = eID(ipart);
+            Vector2 v[maxVerti+1] = {nodes(conn(iel,1))};
+            initArrayWith(v,maxVerti+1,nodes(conn(iel,1)));
+            int numEverts = conn(iel,0);
+            for(int i = 1; i<=numEverts; i++){
+                v[i-1] = nodes(conn(iel,i)-1);
+            }
+            v[numEverts] = nodes(conn(iel,1)-1);
+        double wMPAS[maxVerti] = {0.0};
+        Vector2 gradWMPAS[maxVerti];
+        gradientMPAS(xp(ipart), numEverts, v, wMPAS, gradWMPAS);
+        }
+    });
+    
+    Kokkos::fence();
+
+    /* TEST version check every function
     Kokkos::parallel_for("Efield-2-particles(TEST)",numParticles,KOKKOS_LAMBDA(const int ipart){
         if (status(ipart)){
             int iel = eID(ipart);
@@ -757,10 +796,6 @@ void Particles::interpolateWachpress(){
             }
             //1 2 ... n 1
             v[numEverts] = nodes(conn(iel,1)-1);
-            //n 1 2 ... n 1
-            //TODO: check MPAS planar mesh with Cameron
-            //              one planar mesh
-            //              one 
 
             //TODO: timing byarea and bympas
             double wByArea[maxVerti] = {0.0};
@@ -777,7 +812,7 @@ void Particles::interpolateWachpress(){
             gradientMPAS(xp(ipart), numEverts, v, wMPAS, gradWMPAS);
                 //gradientMPAS(v[0], numEverts, vMPAS, wMPAS, gradWMPAS);
 
-///* answer check<F12>
+        // answer check<F12>
             Vector2 wp_coordByArea(0,0);
             Vector2 wp_coordByGradient(0,0);
 
@@ -800,9 +835,10 @@ void Particles::interpolateWachpress(){
             //if(iel%11 == 0){
             //printf("coordinate from %d interpolation:\n point(%1.3e,%1.3e) wpByArea:(%1.3e,%1.3e) wpByGradient:(%1.3e,%1.3e)\n",ipart,xp(ipart)[0],xp(ipart)[1],wp_coordByArea[0],wp_coordByArea[1],wp_coordByGradient[0],wp_coordByGradient[1]);
             //}
-//==============================================*/
+        //==============================================
         }
     });
+    //==================================================*/
 }
 
 }

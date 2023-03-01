@@ -14,7 +14,7 @@ int main( int argc, char* argv[] ) {
         //{
         int factorOfMesh = atoi(argv[1]);
 
-///*      //MPASMesh
+    /*MPASMesh
         int retval;
         int ncid;
         //if ((retval = nc_open("./ocean.QU.480km.151209.nc", NC_NOWRITE, &ncid)))
@@ -24,10 +24,11 @@ int main( int argc, char* argv[] ) {
         //int dimid;
         //if ((retval = nc_inq_dimid(ncid,"nVertices", &dimid)))
         //  ERR(retval); 
-//*
+
         auto meshRead = sheath::readMPASMesh(ncid);
         auto part_meshRead = sheath::initializeTestParticles(meshRead);
         part_meshRead.interpolateWachpress();
+    //==========MPASMesh end=====================*/
 	
     //initialaize test mesh 
         auto mesh = sheath::initializeTestMesh(factorOfMesh);//100000
@@ -35,13 +36,13 @@ int main( int argc, char* argv[] ) {
 	// int rngSeed = 1010;
 	// change seed (second argument) for different initial particle location
         auto part = sheath::initializeTestParticles(mesh);
-        //part.interpolateWachpress();	
-        //part.interpolateWachpress();	
-        //part.interpolateWachpress();	
-        //part.interpolateWachpress();	
-        //part.interpolateWachpress();
+        part.interpolateWachpress();	
+        part.interpolateWachpress();	
+        part.interpolateWachpress();	
+        part.interpolateWachpress();	
+        part.interpolateWachpress();
         
-        assembly(mesh,part);
+        //assembly(mesh,part);
         //assembly(mesh,part);
         //assembly(mesh,part);
         //assembly(mesh,part);
