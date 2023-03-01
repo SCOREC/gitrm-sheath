@@ -160,7 +160,8 @@ Mesh readMPASMesh(int ncid){
     int retval,
         nCells, nCellsID,
         nVertices, nVerticesID,
-        maxEdges, maxEdgesID;
+        maxEdges, maxEdgesID,
+        vertexDegree, vertexDegreeID;
     size_t temp;
 
     int xVertexID, yVertexID, zVertexID, lonVertexID, latVertexID, verticesOnCellID, cellsOnVertexID, nEdgesOnCellID;
@@ -178,6 +179,8 @@ Mesh readMPASMesh(int ncid){
         ERRexit(retval);
     if ((retval = nc_inq_dimid(ncid, "maxEdges", &maxEdgesID)))
         ERRexit(retval);
+    if ((retval = nc_inq_dimid(ncid, "vertexDegree", &vertexDegreeID)))
+        ERRexit(retval);
     
     
 ///*
@@ -190,7 +193,9 @@ Mesh readMPASMesh(int ncid){
     if ((retval = nc_inq_dimlen(ncid, maxEdgesID, &temp)))
         ERRexit(retval);
     maxEdges = temp;
-
+    if ((retval = nc_inq_dimlen(ncid, vertexDegreeID, &temp)))
+        ERRexit(retval);
+    vertexDegree = temp;
     
     if ((retval = nc_inq_varid(ncid, "xVertex", &xVertexID)))
         ERRexit(retval);
@@ -216,11 +221,15 @@ Mesh readMPASMesh(int ncid){
     latVertex = new double[nVertices];
     verticesOnCell = new int[maxEdges*nCells];
     
-    cellsOnVertex = new int[3*nVertices]; //vertex dimension is 3
+    cellsOnVertex = new int[vertexDegree*nVertices]; //vertex dimension is vertexDegree
     nEdgesOnCell = new int[nCells];
     
     if(maxEdges> maxVerti){
         perror("maxEdges out of bound!\n");
+        exit(1);     
+    }
+    if(vertexDegree> maxElemsPerVert){
+        perror("vertexDegree is too large!\n");
         exit(1);     
     }
 
@@ -267,13 +276,20 @@ Mesh readMPASMesh(int ncid){
 
 
     Vector2View node("node-coord-vector", nVertices);
+    IntElemsPerVertView vertex2Elems("vertexToElements",nVertices); //4 = vertexDegree + 1
 
     //TODO: find a new way to convert the nodes/vertices location    
     Vector2View::HostMirror h_node = Kokkos::create_mirror_view(node);
+    IntElemsPerVertView::HostMirror h_vertex2Elems = Kokkos::create_mirror_view(vertex2Elems);
     for(int i=0; i<nVertices; i++){
-        h_node(i) = Vector2(latVertex[i],lonVertex[i]); 
+        h_node(i) = Vector2(xVertex[i],yVertex[i]); 
+        h_vertex2Elems(i,0) = vertexDegree;
+        for(int j=0;j<vertexDegree; j++){
+            h_vertex2Elems(i,j+1) = cellsOnVertex[i*3+j];
+        }
     }
     Kokkos::deep_copy(node, h_node);
+    Kokkos::deep_copy(vertex2Elems, h_vertex2Elems);
 
 
     //TODO: deal with the array size and convert it to conn
@@ -329,7 +345,7 @@ Mesh readMPASMesh(int ncid){
     delete [] cellsOnVertex;
 
 
-    return Mesh();
+    return Mesh(1,1,node,conn,elemFaceBdry,nCells,nVertices,Efield,elem2Particles,vertex2Elems);
 }
 
 Mesh initializeSheathMesh(int Nel_x,

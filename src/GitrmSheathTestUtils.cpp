@@ -746,7 +746,7 @@ void Particles::interpolateWachpress(){
     auto status = getParticleStatus();
 
     //100 1000 10000 100000 1000000 |(mem out)10000000
-    Kokkos::parallel_for("Efield-2-particles",numParticles,KOKKOS_LAMBDA(const int ipart){
+    Kokkos::parallel_for("Efield-2-particles(TEST)",numParticles,KOKKOS_LAMBDA(const int ipart){
         if (status(ipart)){
             int iel = eID(ipart);
             Vector2 v[maxVerti+1] = {nodes(conn(iel,1))};
@@ -777,7 +777,7 @@ void Particles::interpolateWachpress(){
             gradientMPAS(xp(ipart), numEverts, v, wMPAS, gradWMPAS);
                 //gradientMPAS(v[0], numEverts, vMPAS, wMPAS, gradWMPAS);
 
-/* answer check<F12>
+///* answer check<F12>
             Vector2 wp_coordByArea(0,0);
             Vector2 wp_coordByGradient(0,0);
 

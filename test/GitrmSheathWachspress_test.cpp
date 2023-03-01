@@ -17,25 +17,29 @@ int main( int argc, char* argv[] ) {
 ///*      //MPASMesh
         int retval;
         int ncid;
-        if ((retval = nc_open("./ocean.QU.480km.151209.nc", NC_NOWRITE, &ncid)))
+        //if ((retval = nc_open("./ocean.QU.480km.151209.nc", NC_NOWRITE, &ncid)))
+        //if ((retval = nc_open("./grid_no_island.nc", NC_NOWRITE, &ncid)))
+        if ((retval = nc_open("./grid_island.nc", NC_NOWRITE, &ncid)))
           ERR(retval);
         //int dimid;
         //if ((retval = nc_inq_dimid(ncid,"nVertices", &dimid)))
         //  ERR(retval); 
 //*
         auto meshRead = sheath::readMPASMesh(ncid);
-
-	//initialaize test mesh 
+        auto part_meshRead = sheath::initializeTestParticles(meshRead);
+        part_meshRead.interpolateWachpress();
+	
+    //initialaize test mesh 
         auto mesh = sheath::initializeTestMesh(factorOfMesh);//100000
         // inititalizew single particle
 	// int rngSeed = 1010;
 	// change seed (second argument) for different initial particle location
         auto part = sheath::initializeTestParticles(mesh);
-        part.interpolateWachpress();	
-        part.interpolateWachpress();	
-        part.interpolateWachpress();	
-        part.interpolateWachpress();	
-        part.interpolateWachpress();
+        //part.interpolateWachpress();	
+        //part.interpolateWachpress();	
+        //part.interpolateWachpress();	
+        //part.interpolateWachpress();	
+        //part.interpolateWachpress();
         
         assembly(mesh,part);
         //assembly(mesh,part);
